@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+scrape_configs:
+  # Internal: Monitor Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['prometheus:9090']
+
+  # Internal: Monitor Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # External: Monitor external endpoints (e.g., your websites/services)
+  # NOTE: In production, consider using blackbox_exporter for external monitoring.
+  # Here we add a placeholder for external job scraping.
+  - job_name: 'external-services'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['google.com'] # Example placeholder
+    scheme: https
+    metrics_path: /metrics
