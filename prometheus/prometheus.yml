@@ -21,12 +21,19 @@ scrape_configs:
     static_configs:
       - targets: ['node-exporter:9100']
 
-  # External: Monitor external endpoints (e.g., your websites/services)
-  # NOTE: In production, consider using blackbox_exporter for external monitoring.
-  # Here we add a placeholder for external job scraping.
-  - job_name: 'external-services'
-    scrape_interval: 30s
-    static_configs:
-      - targets: ['google.com'] # Example placeholder
-    scheme: https
-    metrics_path: /metrics
+  # External: HTTP endpoint monitoring via Blackbox Exporter
+  # NOTE: Requires blackbox_exporter service. Uncomment when ready.
+  # - job_name: 'blackbox'
+  #   metrics_path: /probe
+  #   params:
+  #     module: [http_2xx]
+  #   static_configs:
+  #     - targets:
+  #       - https://example.com
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       target_label: __param_target
+  #     - source_labels: [__param_target]
+  #       target_label: instance
+  #     - target_label: __address__
+  #       replacement: blackbox-exporter:9115

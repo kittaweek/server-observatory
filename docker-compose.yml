@@ -75,8 +75,10 @@ services:
       - "9093:9093"
     volumes:
       - ./alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    entrypoint: >
+      /bin/sh -c "envsubst < /etc/alertmanager/alertmanager.yml
+      > /tmp/alertmanager.yml &&
+      /bin/alertmanager --config.file=/tmp/alertmanager.yml"
     networks:
       - observatory-net
     restart: unless-stopped
