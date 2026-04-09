@@ -60,7 +60,16 @@ Edit `.env` and fill in the required values:
 
 > The stack will fail to start if `GF_ADMIN_USER`, `GF_ADMIN_PASSWORD`, `MSTEAMS_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, or `TELEGRAM_CHAT_ID` are not set.
 
-### 3. Start the stack
+### 3. Install pre-commit hooks (optional but recommended)
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+This runs YAML linting and secret detection on every commit.
+
+### 4. Start the stack
 
 ```bash
 docker-compose up -d
