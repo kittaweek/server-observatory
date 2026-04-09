@@ -25,6 +25,14 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
     logging:
       driver: json-file
       options:
@@ -46,6 +54,14 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
     logging:
       driver: json-file
       options:
@@ -65,6 +81,14 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
     logging:
       driver: json-file
       options:
@@ -87,6 +111,14 @@ services:
     networks:
       - observatory-net
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M
+        reservations:
+          cpus: '0.1'
+          memory: 32M
     logging:
       driver: json-file
       options:
