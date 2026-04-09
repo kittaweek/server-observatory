@@ -25,6 +25,11 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   grafana:
     image: grafana/grafana:latest
@@ -41,6 +46,11 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   alertmanager:
     image: prom/alertmanager:latest
@@ -55,6 +65,11 @@ services:
       - observatory-net
     restart: unless-stopped
     env_file: .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -72,3 +87,8 @@ services:
     networks:
       - observatory-net
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
