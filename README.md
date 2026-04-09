@@ -34,3 +34,30 @@ Grafana will auto-provision the "Server Overview" dashboard. Access it at `http:
 - Critical: MS Teams + Telegram
 - Warning: Telegram
 - Configure notification URLs in `.env`.
+
+## Troubleshooting
+
+### Alerts not being delivered
+
+- ตรวจสอบว่าสร้างไฟล์ `.env` และกรอก webhook/token ครบถ้วน
+- Alertmanager ไม่ได้ expand env vars เอง — ต้องใช้ `envsubst` ใน entrypoint (ดู CRITICAL tasks ใน TASKS.md)
+- ดู logs ด้วย: `docker logs alertmanager`
+
+### Grafana เข้าไม่ได้
+
+- รอ ~10 วินาทีหลัง `docker-compose up` ให้ Grafana start ก่อน
+- ตรวจสอบ: `docker logs grafana`
+- Default URL: `http://localhost:3000` (user: `admin`, pass: ดูใน `.env`)
+
+### Prometheus ไม่เห็น metrics
+
+- ตรวจสอบ targets ที่ `http://localhost:9090/targets`
+- หาก `node-exporter` เป็น DOWN ให้รัน: `docker logs node-exporter`
+
+### Container ไม่ขึ้น
+
+```bash
+docker-compose ps          # ดู status ทุก service
+docker-compose logs -f     # ดู logs แบบ realtime
+docker-compose down && docker-compose up -d  # restart ทั้งหมด
+```
