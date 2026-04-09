@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master, dev]
+  pull_request:
+    branches: [master]
+
+jobs:
+  validate:
+    name: Validate configs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose syntax
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+      - name: Validate Prometheus config
+        uses: docker://prom/prometheus:v3.11.1
+        with:
+          entrypoint: /bin/promtool
+          args: check config /github/workspace/prometheus/prometheus.yml
+
+      - name: Validate Alertmanager config
+        uses: docker://prom/alertmanager:v0.32.0
+        with:
+          entrypoint: /bin/amtool
+          args: check-config /github/workspace/alertmanager/alertmanager.yml
+
+      - name: Lint YAML files
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_data: |
+            extends: relaxed
+            rules:
+              line-length:
+                max: 120
