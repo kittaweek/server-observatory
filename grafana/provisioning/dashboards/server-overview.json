@@ -20,9 +20,11 @@
   "links": [],
   "panels": [
     {
+      "id": 1,
       "title": "CPU Usage (%)",
       "type": "graph",
       "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
           "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
@@ -31,18 +33,125 @@
       ]
     },
     {
+      "id": 2,
       "title": "Memory Usage (%)",
       "type": "graph",
       "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
           "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
           "legendFormat": "{{instance}}"
         }
       ]
+    },
+    {
+      "id": 3,
+      "title": "Disk Usage (%)",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "max((node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"} - node_filesystem_free_bytes{fstype!~\"tmpfs|overlay\"}) / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"} * 100)",
+          "legendFormat": "Disk"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Network I/O",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total{device!~\"lo\"}[5m])",
+          "legendFormat": "RX {{device}}"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total{device!~\"lo\"}[5m])",
+          "legendFormat": "TX {{device}}"
+        }
+      ],
+      "yaxes": [
+        { "format": "bytes", "label": "bytes/s" },
+        { "format": "short" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "System Load Average",
+      "type": "graph",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "node_load1",
+          "legendFormat": "1m"
+        },
+        {
+          "expr": "node_load5",
+          "legendFormat": "5m"
+        },
+        {
+          "expr": "node_load15",
+          "legendFormat": "15m"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "System Uptime",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "orientation": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "time() - node_boot_time_seconds",
+          "legendFormat": "Uptime"
+        }
+      ]
     }
   ],
-  "schemaVersion": 26,
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -56,5 +165,5 @@
   "timezone": "",
   "title": "Server Overview",
   "uid": "server-overview",
-  "version": 1
+  "version": 2
 }
