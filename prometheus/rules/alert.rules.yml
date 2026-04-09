@@ -11,7 +11,7 @@ groups:
       description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
 
   - alert: HighCpuUsage
-    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > ${ALERT_CPU_THRESHOLD:-90}
     for: 5m
     labels:
       severity: warning
@@ -20,7 +20,7 @@ groups:
       description: "CPU usage is above 90% (current value: {{ $value | printf \"%.2f\" }}%)"
 
   - alert: HighMemoryUsage
-    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > ${ALERT_MEMORY_THRESHOLD:-90}
     for: 5m
     labels:
       severity: warning
@@ -29,7 +29,7 @@ groups:
       description: "Memory usage is above 90% (current value: {{ $value | printf \"%.2f\" }}%)"
 
   - alert: HighDiskUsage
-    expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+    expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > ${ALERT_DISK_THRESHOLD:-85}
     for: 10m
     labels:
       severity: warning

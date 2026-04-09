@@ -17,10 +17,15 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}'
+    entrypoint: >
+      /bin/sh -c "mkdir -p /tmp/rules &&
+      envsubst < /etc/prometheus/prometheus.yml > /tmp/prometheus.yml &&
+      envsubst < /etc/prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml &&
+      cp /etc/prometheus/rules/recording.rules.yml /tmp/rules/ &&
+      /bin/prometheus
+      --config.file=/tmp/prometheus.yml
+      --storage.tsdb.path=/prometheus
+      --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}"
     networks:
       - observatory-net
     restart: unless-stopped
