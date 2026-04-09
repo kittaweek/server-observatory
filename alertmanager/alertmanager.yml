@@ -23,7 +23,7 @@ receivers:
 - name: 'telegram'
   telegram_configs:
   - bot_token: '${TELEGRAM_BOT_TOKEN}'
-    chat_id: '${TELEGRAM_CHAT_ID}'
+    chat_id: ${TELEGRAM_CHAT_ID}
     parse_mode: 'HTML'
 
 - name: 'msteams-and-telegram'
@@ -31,7 +31,7 @@ receivers:
   - url: '${MSTEAMS_WEBHOOK_URL}'
   telegram_configs:
   - bot_token: '${TELEGRAM_BOT_TOKEN}'
-    chat_id: '${TELEGRAM_CHAT_ID}'
+    chat_id: ${TELEGRAM_CHAT_ID}
     parse_mode: 'HTML'
 
 - name: 'slack'
@@ -48,8 +48,5 @@ receivers:
     auth_password: '${SMTP_PASSWORD}'
 
 - name: 'line'
-  # LINE via webhook proxy for Messaging API is common, 
-  # or use a generic webhook if a proxy exists.
-  # Here placeholder for custom integration logic.
   webhook_configs:
-  - url: 'http://line-bot-proxy:8080/notify'
+  - url: '${LINE_WEBHOOK_URL}'
