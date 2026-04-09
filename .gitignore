@@ -1,0 +1,12 @@
+# Secrets
+.env
+.env.local
+
+# Docker volume data
+prometheus_data/
+grafana_data/
+
+# Temp/editor files
+*.swp
+*.bak
+*.tmp
