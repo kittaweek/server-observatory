@@ -1,0 +1,16 @@
+# Local development overrides — auto-merged by Docker Compose on local.
+# Do NOT commit secrets or local paths into this file.
+# This file is gitignored.
+
+services:
+  prometheus:
+    # Shorter retention for local dev to save disk
+    command:
+      - '--config.file=/tmp/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=3d'
+
+  grafana:
+    # Expose extra port for debugging if needed
+    environment:
+      - GF_LOG_LEVEL=debug

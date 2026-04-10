@@ -2,6 +2,9 @@
 .env
 .env.local
 
+# Local dev overrides
+docker-compose.override.yml
+
 # Docker volume data
 prometheus_data/
 grafana_data/

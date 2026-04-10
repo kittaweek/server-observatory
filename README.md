@@ -60,7 +60,17 @@ Edit `.env` and fill in the required values:
 
 > The stack will fail to start if `GF_ADMIN_USER`, `GF_ADMIN_PASSWORD`, `MSTEAMS_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, or `TELEGRAM_CHAT_ID` are not set.
 
-### 3. Install pre-commit hooks (optional but recommended)
+### 3. Local dev overrides (optional)
+
+Copy the override example to customize settings for local development without modifying the main config:
+
+```bash
+cp docker-compose.override.yml.example docker-compose.override.yml
+```
+
+Docker Compose automatically merges `docker-compose.override.yml` when running `docker-compose up`. This file is gitignored so local changes stay local.
+
+### 4. Install pre-commit hooks (optional but recommended)
 
 ```bash
 pip install pre-commit
