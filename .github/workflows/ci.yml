@@ -15,8 +15,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare .env from example
-        run: cp .env.example .env
+      - name: Prepare .env for CI
+        run: |
+          cat > .env << 'EOF'
+          GF_ADMIN_USER=admin
+          GF_ADMIN_PASSWORD=ci-dummy-password
+          MSTEAMS_WEBHOOK_URL=https://dummy.webhook.url/ci
+          TELEGRAM_BOT_TOKEN=0000000000:ci-dummy-token
+          TELEGRAM_CHAT_ID=000000000
+          PROMETHEUS_RETENTION=15d
+          PROMETHEUS_SCRAPE_INTERVAL=15s
+          PROMETHEUS_EVALUATION_INTERVAL=15s
+          ALERT_CPU_THRESHOLD=90
+          ALERT_MEMORY_THRESHOLD=90
+          ALERT_DISK_THRESHOLD=85
+          SLACK_WEBHOOK_URL=https://hooks.slack.com/ci-dummy
+          SLACK_CHANNEL=#alerts
+          SMTP_HOST=smtp.example.com:587
+          SMTP_FROM=alert@example.com
+          SMTP_USER=alert@example.com
+          SMTP_PASSWORD=ci-dummy-smtp
+          ALERT_EMAIL_TO=ops@example.com
+          LINE_WEBHOOK_URL=https://dummy.line-proxy.example.com/notify
+          EOF
 
       - name: Expand env vars in configs
         run: |
