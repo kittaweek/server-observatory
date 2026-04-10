@@ -20,6 +20,9 @@ jobs:
           - prom/alertmanager:v0.32.0
           - prom/node-exporter:v1.11.1
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Build Grafana
         if: matrix.image == 'grafana/grafana:local'
         run: docker build -t grafana/grafana:local -f Dockerfile.grafana .
