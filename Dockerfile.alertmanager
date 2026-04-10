@@ -1,11 +1,23 @@
 FROM prom/alertmanager:v0.32.0 AS builder
-# Alertmanager is written in Go, to fix go vulnerabilities we usually need to build from source
-# but as a quick fix, we can try to install a newer version of the vulnerable dependency if possible
-# or build it from a newer source.
+# Use a build-capable image to update dependencies
+FROM golang:1.24-alpine AS build
 
-# Since we don't have the source here, let's create a Dockerfile that tries to use a patched version
-# or just a placeholder for the user to provide the source.
-# Given the constraints, let's just create the file structure.
+# Install build dependencies
+RUN apk add --no-cache git gcc musl-dev
 
-# Placeholder: In a real scenario, we would run 'go get' to update dependencies
-# and 'go build' the alertmanager from the prometheus/alertmanager repository.
+# Clone Alertmanager source (use the same version tag as the base image if possible)
+RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git /go/src/github.com/prometheus/alertmanager
+WORKDIR /go/src/github.com/prometheus/alertmanager
+
+# Update the vulnerable opentelemetry dependency
+RUN go get go.opentelemetry.io/otel/sdk@v1.43.0
+RUN go mod tidy
+
+# Build the binaries
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/alertmanager ./cmd/alertmanager
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/amtool ./cmd/amtool
+
+# Create the final image
+FROM prom/alertmanager:v0.32.0
+COPY --from=build /bin/alertmanager /bin/alertmanager
+COPY --from=build /bin/amtool /bin/amtool
