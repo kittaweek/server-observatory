@@ -66,15 +66,17 @@ jobs:
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/prometheus:/etc/prometheus" \
+            --entrypoint=promtool \
             prom/prometheus:v3.11.1 \
-            promtool check config /etc/prometheus/prometheus.yml
+            check config /etc/prometheus/prometheus.yml
 
       - name: Validate Alertmanager config
         run: |
           docker run --rm \
             -v "${{ github.workspace }}/alertmanager:/etc/alertmanager" \
+            --entrypoint=amtool \
             prom/alertmanager:v0.32.0 \
-            amtool check-config /etc/alertmanager/alertmanager.yml
+            check-config /etc/alertmanager/alertmanager.yml
 
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3
