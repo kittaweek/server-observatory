@@ -9,14 +9,15 @@ Self-hosted observability stack using **Prometheus**, **Grafana**, **Alertmanage
 - Alert routing to: **MS Teams** (default), Telegram, Slack, Email, LINE
 - Fully file-based configuration via `.env` + YAML
 - Environment variable expansion via `envsubst` at container startup
+- Patched images: Grafana and Alertmanager are rebuilt from custom Dockerfiles to fix upstream CVEs
 
 ## Services
 
 | Service | Image | Port |
 | --- | --- | --- |
 | Prometheus | prom/prometheus:v3.11.1 | 9090 |
-| Grafana | grafana/grafana:12.4.2 | 3000 |
-| Alertmanager | prom/alertmanager:v0.32.0 | 9093 |
+| Grafana | built from `Dockerfile.grafana` (base: grafana/grafana:12.4.2) | 3000 |
+| Alertmanager | built from `Dockerfile.alertmanager` (base: prom/alertmanager:v0.32.0) | 9093 |
 | Node Exporter | prom/node-exporter:v1.11.1 | 9100 |
 
 ## Setup
