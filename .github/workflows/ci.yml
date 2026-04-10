@@ -30,7 +30,7 @@ jobs:
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
 
-      - name: Prepare .env for CI
+      - name: Expand env vars in configs
         run: |
           cat > .env << 'EOF'
           GF_ADMIN_USER=admin
@@ -53,12 +53,12 @@ jobs:
           ALERT_EMAIL_TO=ops@example.com
           LINE_WEBHOOK_URL=https://dummy.line-proxy.example.com/notify
           EOF
-
-      - name: Expand env vars in configs
-        run: |
           export $(grep -v "^#" .env | xargs)
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
           envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+
+      - name: Validate docker-compose syntax
+        run: docker compose config --quiet
 
       - name: Validate Prometheus config
         run: |
