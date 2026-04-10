@@ -3,22 +3,20 @@ name: CI
 on:
   push:
     branches: [master, dev]
-  # pull_request:
-  #   branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
-  validate:
-    name: Validate configs
+  lint:
+    name: Lint & pre-commit
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python (for pre-commit)
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.12"
 
       - name: Cache pre-commit environments
         uses: actions/cache@v4
@@ -27,60 +25,56 @@ jobs:
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: pre-commit-
 
-      - name: Run pre-commit
+      - name: Run pre-commit hooks
         uses: pre-commit/action@v3.0.1
 
-      # - name: Expand env vars in configs
-      #   run: |
-      #     cat > .env << 'EOF'
-      #     GF_ADMIN_USER=admin
-      #     GF_ADMIN_PASSWORD=ci-dummy-password
-      #     MSTEAMS_WEBHOOK_URL=https://dummy.webhook.url/ci
-      #     TELEGRAM_BOT_TOKEN=0000000000:ci-dummy-token
-      #     TELEGRAM_CHAT_ID=000000000
-      #     PROMETHEUS_RETENTION=15d
-      #     PROMETHEUS_SCRAPE_INTERVAL=15s
-      #     PROMETHEUS_EVALUATION_INTERVAL=15s
-      #     ALERT_CPU_THRESHOLD=90
-      #     ALERT_MEMORY_THRESHOLD=90
-      #     ALERT_DISK_THRESHOLD=85
-      #     SLACK_WEBHOOK_URL=https://hooks.slack.com/ci-dummy
-      #     SLACK_CHANNEL=#alerts
-      #     SMTP_HOST=smtp.example.com:587
-      #     SMTP_FROM=alert@example.com
-      #     SMTP_USER=alert@example.com
-      #     SMTP_PASSWORD=ci-dummy-smtp
-      #     ALERT_EMAIL_TO=ops@example.com
-      #     LINE_WEBHOOK_URL=https://dummy.line-proxy.example.com/notify
-      #     EOF
-      #     export $(grep -v "^#" .env | xargs)
-      #     envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
-      #     envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+  validate-compose:
+    name: Validate Docker Compose
+    runs-on: ubuntu-24.04
 
-      # - name: Validate docker-compose syntax
-      #   run: docker compose config --quiet
+    steps:
+      - uses: actions/checkout@v4
 
-      # - name: Validate Prometheus config
-      #   run: |
-      #     docker run --rm \
-      #       -v "/tmp/prometheus.yml:/tmp/prometheus.yml" \
-      #       --entrypoint=promtool \
-      #       prom/prometheus:v3.11.1 \
-      #       check config /tmp/prometheus.yml
+      - name: Generate dummy .env for validation
+        run: |
+          cat > .env << 'EOF'
+          GF_ADMIN_USER=admin
+          GF_ADMIN_PASSWORD=ci-dummy-password
+          MSTEAMS_WEBHOOK_URL=https://dummy.webhook.url/ci
+          TELEGRAM_BOT_TOKEN=0000000000:ci-dummy-token
+          TELEGRAM_CHAT_ID=000000000
+          PROMETHEUS_RETENTION=15d
+          PROMETHEUS_SCRAPE_INTERVAL=15s
+          PROMETHEUS_EVALUATION_INTERVAL=15s
+          ALERT_CPU_THRESHOLD=90
+          ALERT_MEMORY_THRESHOLD=90
+          ALERT_DISK_THRESHOLD=85
+          SLACK_WEBHOOK_URL=https://hooks.slack.com/ci-dummy
+          SLACK_CHANNEL=#alerts
+          SMTP_HOST=smtp.example.com:587
+          SMTP_FROM=alert@example.com
+          SMTP_USER=alert@example.com
+          SMTP_PASSWORD=ci-dummy-smtp
+          ALERT_EMAIL_TO=ops@example.com
+          LINE_WEBHOOK_URL=https://dummy.line-proxy.example.com/notify
+          EOF
 
-      # - name: Validate Alertmanager config
-      #   run: |
-      #     docker run --rm \
-      #       -v "/tmp/alertmanager.yml:/tmp/alertmanager.yml" \
-      #       --entrypoint=amtool \
-      #       prom/alertmanager:v0.32.0 \
-      #       check-config /tmp/alertmanager.yml
+      - name: Validate docker-compose config
+        run: docker compose config --quiet
 
-      - name: Lint YAML files
-        uses: ibiqlik/action-yamllint@v3
+      - name: Expand env vars in configs
+        run: |
+          envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
+          envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+
+      - name: Validate Prometheus config
+        uses: docker://prom/prometheus:v3.11.1
         with:
-          config_data: |
-            extends: relaxed
-            rules:
-              line-length:
-                max: 120
+          entrypoint: /bin/promtool
+          args: check config /tmp/prometheus.yml
+
+      - name: Validate Alertmanager config
+        uses: docker://prom/alertmanager:v0.32.0
+        with:
+          entrypoint: /bin/amtool
+          args: check-config /tmp/alertmanager.yml
