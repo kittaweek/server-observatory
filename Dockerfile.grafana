@@ -1,0 +1,8 @@
+FROM grafana/grafana:12.4.2
+
+# Upgrade vulnerable system packages
+USER root
+RUN apk update && apk upgrade --no-cache zlib
+
+# Switch back to grafana user
+USER grafana
