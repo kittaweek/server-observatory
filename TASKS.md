@@ -1,77 +1,118 @@
 # server-observatory — Task List
 
-> Generated from code review. Organized by severity level.
+> Last reviewed: 2026-04-10. Reflects current state of codebase.
 
 ---
 
-## 🟢 LOW
+## ✅ Done
 
-- [ ] **Add `.gitignore` entries** — ไฟล์ว่างเปล่า เสี่ยง commit `.env` หรือ volume data ขึ้น git
-  - เพิ่ม: `.env`, `prometheus_data/`, `grafana_data/`, `*.swp`, `*.bak`
+### Infrastructure
 
-- [ ] **Fix Naming inconsistency** — `node-exporter` ใช้ hyphen ขณะที่ service อื่น (`prometheus`, `grafana`, `alertmanager`) ไม่มี
-  - แก้ service name และ `container_name` จาก `node-exporter` → `node_exporter` หรือ standardize ทั้งหมด
+- [x] Docker Compose with shared network `observatory-net` and named volumes
+- [x] Pin all image versions (prometheus v3.11.1, grafana 12.4.2, alertmanager v0.32.0, node-exporter v1.11.1)
+- [x] CPU/Memory resource limits on all services
+- [x] JSON file logging with rotation (`max-size: 10m`, `max-file: 3`)
+- [x] Healthchecks on Prometheus and Grafana
+- [x] `restart: unless-stopped` on all services
 
-- [ ] **Enable Grafana datasource editing** — `editable: false` ใน `grafana/provisioning/datasources/prometheus.yml` ทำให้ปรับ Prometheus URL ใน UI ไม่ได้
-  - เปลี่ยนเป็น `editable: true`
+### Config & Security
 
-- [ ] **Add Docker logging limits** — ไม่มี log rotation ทำให้ disk เต็มได้ในระยะยาว
-  - เพิ่ม `logging.driver` + `max-size`/`max-file` ทุก service
+- [x] `envsubst` entrypoint on Prometheus and Alertmanager for `${VAR}` expansion
+- [x] Alertmanager `entrypoint.sh` validates required env vars before start
+- [x] Grafana credentials require explicit `.env` (`:?` operator, no `changeme` fallback)
+- [x] `.gitignore` covers `.env`, volume data, temp files, override file
+- [x] Alert thresholds configurable via `ALERT_CPU/MEMORY/DISK_THRESHOLD`
+- [x] Scrape intervals configurable via `PROMETHEUS_SCRAPE_INTERVAL/EVALUATION_INTERVAL`
 
-- [ ] **Consider mounting log volume** — `json-file` logs อยู่ที่ host (`/var/lib/docker/containers/`) และจะหายเมื่อ update image version (container ถูก recreate)
-  - พิจารณา bind mount `./logs/` หรือ named volume สำหรับ log persistence
+### Alerting
 
-- [ ] **Add Troubleshooting section to README** — ไม่มีคำแนะนำเมื่อ alerts ไม่ส่ง หรือ service ไม่ขึ้น
+- [x] Alert rules: InstanceDown, HighCpuUsage, HighMemoryUsage, HighDiskUsage, DiskWillFillIn4Hours
+- [x] Recording rules: CPU, memory, disk, network
+- [x] Alertmanager routing: default=MS Teams, critical=MS Teams+Telegram, warning=Telegram
+- [x] All receivers use env vars: MS Teams, Telegram, Slack, Email, LINE
 
----
+### Grafana
 
-## 🟡 MEDIUM
+- [x] Auto-provisioned datasource (editable)
+- [x] Dashboard with 6 panels: CPU, Memory, Disk gauge, Network I/O, Load Average, Uptime
 
-- [ ] **Complete Grafana Dashboard** — มีแค่ 2 panels (CPU, Memory) แต่ Spec กำหนด 6 panels
-  - เพิ่ม: Disk Usage (gauge), Network I/O, System Load Average, Uptime
+### CI/CD & DevEx
 
-- [ ] **Pin service versions** — `grafana:latest`, `prom/prometheus:latest` ฯลฯ ควร pin เป็น specific version เช่น `grafana/grafana:10.4`
-
-- [ ] **Add resource limits** — ไม่มี CPU/Memory limits ทำให้ service ใดก็ได้กิน resource ทั้งหมด
-  - เพิ่ม `deploy.resources.limits` ทุก service
-
-- [ ] **Fix or remove LINE receiver** — `alertmanager/alertmanager.yml` ชี้ไปที่ `http://line-bot-proxy:8080/notify` ซึ่งไม่มี service นี้
-  - ตัดสินใจ: implement proxy service จริงๆ หรือ remove สำหรับ v1
-
-- [ ] **Make scrape intervals configurable** — `prometheus/prometheus.yml` hard-code `15s`/`30s`
-  - เปลี่ยนเป็น `${PROMETHEUS_SCRAPE_INTERVAL:-15s}`
-
-- [ ] **Make alert thresholds configurable** — CPU 90%, Memory 90%, Disk 85% hard-coded ใน `prometheus/rules/alert.rules.yml`
-
----
-
-## 🟠 HIGH
-
-- [ ] **Add Healthchecks** — ไม่มี `healthcheck` สำหรับ Prometheus และ Grafana (Spec.md กำหนดให้ทำ)
-  - Prometheus: `wget http://localhost:9090/-/healthy`
-  - Grafana: `wget http://localhost:3000/api/health`
-
-- [ ] **Implement Recording Rules** — `prometheus/rules/recording.rules.yml` ว่างเปล่า ทำให้ dashboard queries ช้า
-  - เพิ่ม: `node:cpu:usage:rate5m`, `node:memory:usage:percent`, `node:disk:usage:percent`
-
-- [ ] **Add missing `DiskWillFillIn4Hours` alert** — `prometheus/rules/alert.rules.yml` ขาด alert นี้ที่ Spec กำหนด
-  - ใช้ `predict_linear(node_filesystem_free_bytes[1h], 4*3600) < 0`
-
-- [ ] **Add `.env` validation** — ไม่มีการตรวจว่า required env vars ครบก่อน start service ทำให้ fail แบบ silent
-  - สร้าง entrypoint script ที่ validate vars ก่อน exec
-
-- [ ] **Strengthen default credentials** — `GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-changeme}` fallback อ่อนแอ
-  - ลบ default value หรือทำให้ fail ชัดเจนถ้าไม่มี `.env`
+- [x] Dependabot: Docker images + GitHub Actions (weekly, Monday)
+- [x] Pre-commit hooks: end-of-file-fixer, trailing-whitespace, check-yaml, yamllint, gitleaks
+- [x] Pre-commit autoupdate workflow (weekly, Monday, opens PR)
+- [x] GitHub PR template
+- [x] `docker-compose.override.yml.example` for local dev customization
+- [x] Trivy vulnerability scan workflow (on push + weekly)
+- [x] `Dockerfile.grafana` — patches vulnerable system packages
+- [x] `Dockerfile.alertmanager` — rebuilds from source with updated Go dependencies
 
 ---
 
-## 🔴 CRITICAL
+## 🔴 Must Fix (Blocking)
 
-- [ ] **Fix Alertmanager environment variable expansion** — Alertmanager ไม่ expand `${VAR}` เอง ทำให้ alerts ทุกช่องทาง (Teams, Telegram, Slack, Email, LINE) ไม่ทำงาน
-  - แก้โดยเพิ่ม entrypoint ใน `docker-compose.yml`:
-    ```yaml
-    entrypoint: /bin/sh -c 'envsubst < /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml && alertmanager --config.file=/tmp/alertmanager.yml'
-    ```
+- [ ] **`Dockerfile.alertmanager`: uses `golang:1.25-alpine` which doesn't exist**
+  - Go latest is 1.24.x — `1.25` is not released → Docker build will fail
+  - Fix: change to `golang:1.24-alpine`
 
-- [ ] **Remove or fix `external-services` Prometheus job** — `prometheus/prometheus.yml` พยายาม scrape `google.com/metrics` ซึ่งไม่มี Prometheus metrics → error logs ต่อเนื่อง
-  - ลบ job นี้ออก หรือ implement Blackbox Exporter อย่างถูกต้อง
+- [ ] **`docker-compose.yml`: still pulls `prom/alertmanager:v0.32.0` from Docker Hub**
+  - `Dockerfile.alertmanager` builds a patched version but `docker-compose.yml` doesn't use it
+  - The patch is never applied in production — fix by referencing the built image
+
+- [ ] **`docker-compose.yml`: still pulls `grafana/grafana:12.4.2` from Docker Hub**
+  - Same issue as above — `Dockerfile.grafana` patches the image but isn't used
+  - Fix: build and reference local image in `docker-compose.yml`
+
+- [ ] **CI `secret-scan` job references non-existent `.secrets.baseline`**
+  - `ci.yml`: `detect-secrets-hook --baseline .secrets.baseline` — file doesn't exist
+  - Fix: generate baseline with `detect-secrets scan > .secrets.baseline` and commit it, or remove job (gitleaks already covers this)
+
+- [ ] **CI `validate-compose` copies non-existent files**
+  - `ci.yml`: copies `dex-config.yaml.example` and `emails.txt.example` which don't exist in this repo
+  - Fix: remove those two `cp` lines
+
+- [ ] **CI `ci.yml` triggers on `main` but repo uses `master`**
+  - Line 5: `branches: [main, dev]` → should be `[master, dev]`
+
+---
+
+## 🟠 Should Fix
+
+- [ ] **CI `validate-compose`: should use dummy `.env` not copy `.env.example`**
+  - `.env.example` has placeholder values that may fail `:?` validation
+  - Fix: use explicit dummy values (same pattern as the old validate step)
+
+- [ ] **CI: pre-commit cache removed after rewrite**
+  - `actions/cache@v4` for pre-commit was dropped — CI installs hooks from scratch every run
+  - Fix: add cache step keyed on `.pre-commit-config.yaml` hash
+
+- [ ] **`Dockerfile.alertmanager`: full Go build on every CI run is slow (~3-5 min)**
+  - Consider caching Go module downloads in CI with `actions/cache`
+
+---
+
+## 🟡 Nice to Have
+
+- [ ] **Add `.trivyignore` file**
+  - `trivy.yml` references `.trivyignore` but file doesn't exist — Trivy will warn
+  - Create empty file or populate with known acceptable CVEs
+
+- [ ] **`docker-compose.override.yml` committed to git**
+  - `.gitignore` lists it but it was committed before that rule — should be untracked
+  - Fix: `git rm --cached docker-compose.override.yml`
+
+- [ ] **README: mention Dockerfiles and patched images**
+  - README doesn't explain why `Dockerfile.grafana` / `Dockerfile.alertmanager` exist
+
+- [ ] **Add `HEALTHCHECK` to Dockerfiles**
+  - Healthchecks are in `docker-compose.yml` but not in the images themselves
+
+---
+
+## 🔵 Future / v2
+
+- [ ] Loki + Promtail for log aggregation
+- [ ] Blackbox Exporter for external HTTP monitoring
+- [ ] Multi-node / remote write support
+- [ ] Grafana SSO / LDAP
+- [ ] Ansible playbook for provisioning
