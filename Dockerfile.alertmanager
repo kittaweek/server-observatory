@@ -1,14 +1,16 @@
 FROM golang:1.25-alpine AS build
 
 # Install build dependencies
-RUN apk add --no-cache git gcc musl-dev
+RUN apk add --no-cache git gcc musl-dev nodejs npm
 
 # Clone Alertmanager source
 RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git /go/src/github.com/prometheus/alertmanager
 WORKDIR /go/src/github.com/prometheus/alertmanager
 
-# Update dependencies by editing go.mod directly
-# This is more reliable than 'go get' when dependencies are pinned
+# Build UI assets first
+RUN npm install && npm run build
+
+# Update dependencies
 RUN go mod edit -dropreplace go.opentelemetry.io/otel/sdk && \
     go get go.opentelemetry.io/otel/sdk@v1.43.0 && \
     go mod tidy
