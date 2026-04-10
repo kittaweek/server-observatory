@@ -1,17 +1,17 @@
-FROM prom/alertmanager:v0.32.0 AS builder
-# Use a build-capable image to update dependencies
 FROM golang:1.24-alpine AS build
 
 # Install build dependencies
 RUN apk add --no-cache git gcc musl-dev
 
-# Clone Alertmanager source (use the same version tag as the base image if possible)
+# Clone Alertmanager source
 RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git /go/src/github.com/prometheus/alertmanager
 WORKDIR /go/src/github.com/prometheus/alertmanager
 
-# Update the vulnerable opentelemetry dependency
-RUN go get go.opentelemetry.io/otel/sdk@v1.43.0
-RUN go mod tidy
+# Update dependencies by editing go.mod directly
+# This is more reliable than 'go get' when dependencies are pinned
+RUN go mod edit -dropreplace go.opentelemetry.io/otel/sdk && \
+    go get go.opentelemetry.io/otel/sdk@v1.43.0 && \
+    go mod tidy
 
 # Build the binaries
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/alertmanager ./cmd/alertmanager
