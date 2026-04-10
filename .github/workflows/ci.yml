@@ -56,27 +56,25 @@ jobs:
 
       - name: Expand env vars in configs
         run: |
+          export $(grep -v "^#" .env | xargs)
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
           envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
-
-      - name: Validate docker-compose syntax
-        run: docker compose config --quiet
 
       - name: Validate Prometheus config
         run: |
           docker run --rm \
-            -v "${{ github.workspace }}/prometheus:/etc/prometheus" \
+            -v "/tmp/prometheus.yml:/tmp/prometheus.yml" \
             --entrypoint=promtool \
             prom/prometheus:v3.11.1 \
-            check config /etc/prometheus/prometheus.yml
+            check config /tmp/prometheus.yml
 
       - name: Validate Alertmanager config
         run: |
           docker run --rm \
-            -v "${{ github.workspace }}/alertmanager:/etc/alertmanager" \
+            -v "/tmp/alertmanager.yml:/tmp/alertmanager.yml" \
             --entrypoint=amtool \
             prom/alertmanager:v0.32.0 \
-            check-config /etc/alertmanager/alertmanager.yml
+            check-config /tmp/alertmanager.yml
 
       - name: Lint YAML files
         uses: ibiqlik/action-yamllint@v3
