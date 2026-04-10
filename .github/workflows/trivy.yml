@@ -42,8 +42,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build ${{ matrix.name }}
-        run: docker build -t ${{ matrix.name }}:ci -f ${{ matrix.dockerfile }} .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          tags: ${{ matrix.name }}:ci
+          load: true
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
 
       - name: Run Trivy on ${{ matrix.name }}
         uses: aquasecurity/trivy-action@0.35.0
