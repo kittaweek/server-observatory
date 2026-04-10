@@ -11,7 +11,6 @@ on:
 jobs:
   scan:
     name: Scan Docker images
-    needs: build
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -35,4 +34,3 @@ jobs:
           ignore-unfixed: true
           # For local images, trivy needs access to the docker daemon
           # This should work as long as it's been built in the same runner
-
