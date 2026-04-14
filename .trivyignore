@@ -1,6 +1,2 @@
 # Trivy ignore file
-# Add CVE IDs here to suppress known accepted vulnerabilities
-# Format: CVE-YYYY-NNNNN
-#
-# Example:
-# CVE-2023-12345  # reason: not exploitable in this context
+# Add CVE IDs here (one per line) if they are false positives or acceptable risks.

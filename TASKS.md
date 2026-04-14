@@ -39,73 +39,54 @@
 ### CI/CD & DevEx
 
 - [x] Dependabot: Docker images + GitHub Actions (weekly, Monday)
-- [x] Pre-commit hooks: end-of-file-fixer, trailing-whitespace, check-yaml, yamllint, gitleaks
+- [x] Pre-commit hooks: end-of-file-fixer, trailing-whitespace, check-yaml, yamllint, gitleaks, black, isort, mypy, flake8, bandit, hadolint
 - [x] Pre-commit autoupdate workflow (weekly, Monday, opens PR)
 - [x] GitHub PR template
 - [x] `docker-compose.override.yml.example` for local dev customization
 - [x] Trivy vulnerability scan workflow (on push + weekly)
 - [x] `Dockerfile.grafana` — patches vulnerable system packages
-- [x] `Dockerfile.alertmanager` — rebuilds from source with updated Go dependencies
+- [x] `Dockerfile.alertmanager` — rebuilds from source with updated Go dependencies (fixed to v1.24)
+- [x] `Dockerfile.prometheus` — custom build for `envsubst` and healthchecks
+- [x] `.secrets.baseline` — generated and tracked
+- [x] `.trivyignore` — created to avoid false positives
 
 ---
 
-## 🔴 Must Fix (Blocking)
+## 🟢 Corrected (Previously Blocking)
 
-- [ ] **`Dockerfile.alertmanager`: uses `golang:1.25-alpine` which doesn't exist**
-  - Go latest is 1.24.x — `1.25` is not released → Docker build will fail
-  - Fix: change to `golang:1.24-alpine`
-
-- [ ] **`docker-compose.yml`: still pulls `prom/alertmanager:v0.32.0` from Docker Hub**
-  - `Dockerfile.alertmanager` builds a patched version but `docker-compose.yml` doesn't use it
-  - The patch is never applied in production — fix by referencing the built image
-
-- [ ] **`docker-compose.yml`: still pulls `grafana/grafana:12.4.2` from Docker Hub**
-  - Same issue as above — `Dockerfile.grafana` patches the image but isn't used
-  - Fix: build and reference local image in `docker-compose.yml`
-
-- [ ] **CI `secret-scan` job references non-existent `.secrets.baseline`**
-  - `ci.yml`: `detect-secrets-hook --baseline .secrets.baseline` — file doesn't exist
-  - Fix: generate baseline with `detect-secrets scan > .secrets.baseline` and commit it, or remove job (gitleaks already covers this)
-
-- [ ] **CI `validate-compose` copies non-existent files**
-  - `ci.yml`: copies `dex-config.yaml.example` and `emails.txt.example` which don't exist in this repo
-  - Fix: remove those two `cp` lines
-
-- [ ] **CI `ci.yml` triggers on `main` but repo uses `master`**
-  - Line 5: `branches: [main, dev]` → should be `[master, dev]`
+- [x] **`Dockerfile.alertmanager`: uses `golang:1.25-alpine` which doesn't exist**
+  - Fixed: changed to `golang:1.24-alpine`
+- [x] **`docker-compose.yml`: still pulls `prom/alertmanager:v0.32.0` from Docker Hub**
+  - Fixed: now uses `build: .`
+- [x] **`docker-compose.yml`: still pulls `grafana/grafana:12.4.2` from Docker Hub**
+  - Fixed: now uses `build: .`
+- [x] **CI `secret-scan` job references non-existent `.secrets.baseline`**
+  - Fixed: generated baseline and updated CI to use it.
+- [x] **CI `validate-compose` copies non-existent files**
+  - Fixed: removed invalid `cp` lines.
+- [x] **CI `ci.yml` triggers on `main` but repo uses `master`**
+  - Fixed: updated to `master`.
 
 ---
 
 ## 🟠 Should Fix
 
-- [ ] **CI `validate-compose`: should use dummy `.env` not copy `.env.example`**
-  - `.env.example` has placeholder values that may fail `:?` validation
-  - Fix: use explicit dummy values (same pattern as the old validate step)
-
-- [ ] **CI: pre-commit cache removed after rewrite**
-  - `actions/cache@v4` for pre-commit was dropped — CI installs hooks from scratch every run
-  - Fix: add cache step keyed on `.pre-commit-config.yaml` hash
-
+- [x] **CI `validate-compose`: should use dummy `.env` not copy `.env.example`**
+  - Fixed: uses explicit dummy values in the script.
+- [x] **CI: pre-commit cache restored**
+  - Fixed: added `actions/cache@v4` back to CI.
 - [ ] **`Dockerfile.alertmanager`: full Go build on every CI run is slow (~3-5 min)**
-  - Consider caching Go module downloads in CI with `actions/cache`
+  - Consider caching Go module downloads in CI with `actions/cache` (Future)
 
 ---
 
 ## 🟡 Nice to Have
 
-- [ ] **Add `.trivyignore` file**
-  - `trivy.yml` references `.trivyignore` but file doesn't exist — Trivy will warn
-  - Create empty file or populate with known acceptable CVEs
-
-- [ ] **`docker-compose.override.yml` committed to git**
-  - `.gitignore` lists it but it was committed before that rule — should be untracked
-  - Fix: `git rm --cached docker-compose.override.yml`
-
-- [ ] **README: mention Dockerfiles and patched images**
-  - README doesn't explain why `Dockerfile.grafana` / `Dockerfile.alertmanager` exist
-
-- [ ] **Add `HEALTHCHECK` to Dockerfiles**
-  - Healthchecks are in `docker-compose.yml` but not in the images themselves
+- [x] **Add `.trivyignore` file**
+- [x] **`docker-compose.override.yml` committed to git**
+  - Fixed: Untracked from Git index.
+- [x] **README: mention Dockerfiles and patched images**
+- [x] **Add `HEALTHCHECK` to Dockerfiles**
 
 ---
 
