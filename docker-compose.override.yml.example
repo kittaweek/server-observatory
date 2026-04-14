@@ -14,3 +14,20 @@ services:
     # Expose extra port for debugging if needed
     environment:
       - GF_LOG_LEVEL=debug
+
+  # --- Remote access (use only behind a firewall or VPN) ---
+  # By default all ports are bound to 127.0.0.1 (localhost only).
+  # Uncomment the blocks below to expose services on all interfaces.
+  # WARNING: ensure your firewall restricts access before doing this.
+  #
+  # prometheus:
+  #   ports:
+  #     - "0.0.0.0:9090:9090"
+  #
+  # grafana:
+  #   ports:
+  #     - "0.0.0.0:3000:3000"
+  #
+  # alertmanager:
+  #   ports:
+  #     - "0.0.0.0:9093:9093"

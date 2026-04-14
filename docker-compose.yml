@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 networks:
   observatory-net:
@@ -10,40 +10,27 @@ volumes:
 
 services:
   prometheus:
-    image: prom/prometheus:v3.11.1
+    build:
+      context: .
+      dockerfile: Dockerfile.prometheus
+    image: prom/prometheus:local
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
-    entrypoint: >
-      /bin/sh -c "mkdir -p /tmp/rules &&
-      envsubst < /etc/prometheus/prometheus.yml > /tmp/prometheus.yml &&
-      envsubst < /etc/prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml &&
-      cp /etc/prometheus/rules/recording.rules.yml /tmp/rules/ &&
-      /bin/prometheus
-      --config.file=/tmp/prometheus.yml
-      --storage.tsdb.path=/prometheus
-      --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}"
+    entrypoint: ["/bin/sh", "/etc/prometheus/entrypoint.sh"]
     networks:
       - observatory-net
     restart: unless-stopped
+    user: root
     env_file: .env
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
     logging:
       driver: json-file
       options:
@@ -57,7 +44,7 @@ services:
     image: grafana/grafana:local
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:?GF_ADMIN_USER is required. Please set it in .env}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:?GF_ADMIN_PASSWORD is required. Please set it in .env}
@@ -73,15 +60,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
     logging:
       driver: json-file
       options:
@@ -95,22 +73,20 @@ services:
     image: prom/alertmanager:local
     container_name: alertmanager
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     volumes:
       - ./alertmanager:/etc/alertmanager
     entrypoint: ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]
     networks:
       - observatory-net
     restart: unless-stopped
+    user: root
     env_file: .env
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 64M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     logging:
       driver: json-file
       options:
@@ -121,26 +97,18 @@ services:
     image: prom/node-exporter:v1.11.1
     container_name: node-exporter
     ports:
-      - "9100:9100"
+      - "127.0.0.1:9100:9100"
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
     networks:
       - observatory-net
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'
-          memory: 64M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
     logging:
       driver: json-file
       options:

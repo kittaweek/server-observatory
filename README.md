@@ -18,10 +18,12 @@ A professional, minimal, and fully-containerized monitoring stack based on **Pro
    make up
    ```
 
-3. **Access**:
-   - **Grafana**: `http://localhost:3000` (Default: admin/admin)
+3. **Access** (localhost only by default):
+   - **Grafana**: `http://localhost:3000`
    - **Prometheus**: `http://localhost:9090`
    - **Alertmanager**: `http://localhost:9093`
+
+   > All ports are bound to `127.0.0.1` by default. To expose services on the network, see the remote access section in `docker-compose.override.yml.example`.
 
 ---
 
