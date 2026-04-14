@@ -48,7 +48,7 @@ jobs:
 
       - name: Validate Prometheus config
         run: |
-          set -a && source .env && set +a
+          export $(grep -v '^#' .env | xargs)
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
           docker run --rm \
             --entrypoint promtool \
@@ -57,7 +57,7 @@ jobs:
 
       - name: Validate Alertmanager config
         run: |
-          set -a && source .env && set +a
+          export $(grep -v '^#' .env | xargs)
           envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
           docker run --rm \
             --entrypoint amtool \
