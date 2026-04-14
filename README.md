@@ -1,149 +1,93 @@
-# Server Observatory
+# 🛰️ Server Observatory Stack
 
-Self-hosted observability stack using **Prometheus**, **Grafana**, **Alertmanager**, and **Node Exporter**.
+A professional, minimal, and fully-containerized monitoring stack based on **Prometheus**, **Grafana**, and **Alertmanager**. Designed for high-reliability server monitoring with modern security practices.
 
-## Features
+![Grafana Dashboard Example](https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg) <!-- Placeholder for actual screenshot later -->
 
-- Collects host metrics: CPU, RAM, Disk, Network via Node Exporter
-- Pre-provisioned Grafana dashboard — no manual UI setup required
-- Alert routing to: **MS Teams** (default), Telegram, Slack, Email, LINE
-- Fully file-based configuration via `.env` + YAML
-- Environment variable expansion via `envsubst` at container startup
-- Patched images: Grafana and Alertmanager are rebuilt from custom Dockerfiles to fix upstream CVEs
+## 🚀 Quick Start
 
-## Services
+1. **Clone and Setup**:
+   ```bash
+   git clone <repo-url>
+   cd server-observatory
+   cp .env.example .env
+   ```
 
-| Service | Image | Port |
-| --- | --- | --- |
-| Prometheus | prom/prometheus:v3.11.1 | 9090 |
-| Grafana | built from `Dockerfile.grafana` (base: grafana/grafana:12.4.2) | 3000 |
-| Alertmanager | built from `Dockerfile.alertmanager` (base: prom/alertmanager:v0.32.0) | 9093 |
-| Node Exporter | prom/node-exporter:v1.11.1 | 9100 |
+2. **Deploy**:
+   ```bash
+   make up
+   ```
 
-## Setup
+3. **Access**:
+   - **Grafana**: `http://localhost:3000` (Default: admin/admin)
+   - **Prometheus**: `http://localhost:9090`
+   - **Alertmanager**: `http://localhost:9093`
 
-### 1. Clone the repository
+---
 
-```bash
-git clone https://github.com/kittaweek/server-observatory.git
-cd server-observatory
-```
+## 🏗️ Core Features
 
-### 2. Configure environment variables
+- **Built-in Security**: Custom Dockerfiles for Grafana and Alertmanager to patch upstream CVEs.
+- **Dynamic Config**: Environment variable expansion (`${VAR}`) supported in all configuration files.
+- **Pre-provisioned**: Automatic Grafana datasource and Linux monitoring dashboard.
+- **Multi-channel Alerts**: Ready-to-use templates for MS Teams, Telegram, Slack, LINE, and Email.
+- **Resource Constraints**: CPU/Memory limits applied to all services to prevent host exhaustion.
 
-```bash
-cp .env.example .env
-```
+---
 
-Edit `.env` and fill in the required values:
+## ⚙️ Configuration (.env)
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `GF_ADMIN_USER` | Yes | Grafana admin username |
-| `GF_ADMIN_PASSWORD` | Yes | Grafana admin password |
-| `MSTEAMS_WEBHOOK_URL` | Yes | MS Teams incoming webhook URL |
-| `TELEGRAM_BOT_TOKEN` | Yes | Telegram bot token |
-| `TELEGRAM_CHAT_ID` | Yes | Telegram chat ID (integer) |
-| `SLACK_WEBHOOK_URL` | No | Slack incoming webhook URL |
-| `SLACK_CHANNEL` | No | Slack channel (e.g. `#alerts`) |
-| `SMTP_HOST` | No | SMTP host and port (e.g. `smtp.gmail.com:587`) |
-| `SMTP_FROM` | No | Sender email address |
-| `SMTP_USER` | No | SMTP auth username |
-| `SMTP_PASSWORD` | No | SMTP auth password |
-| `ALERT_EMAIL_TO` | No | Alert recipient email address |
-| `LINE_WEBHOOK_URL` | No | LINE webhook proxy URL |
-| `PROMETHEUS_RETENTION` | No | Metrics retention period (default: `15d`) |
-| `PROMETHEUS_SCRAPE_INTERVAL` | No | Scrape interval (default: `15s`) |
-| `PROMETHEUS_EVALUATION_INTERVAL` | No | Rule evaluation interval (default: `15s`) |
-| `ALERT_CPU_THRESHOLD` | No | CPU usage alert threshold % (default: `90`) |
-| `ALERT_MEMORY_THRESHOLD` | No | Memory usage alert threshold % (default: `90`) |
-| `ALERT_DISK_THRESHOLD` | No | Disk usage alert threshold % (default: `85`) |
+Edit the `.env` file to customize your stack. The system is designed with "Soft-defaults" — if you leave a variable empty, it will use a safe default instead of failing.
 
-> The stack will fail to start if `GF_ADMIN_USER`, `GF_ADMIN_PASSWORD`, `MSTEAMS_WEBHOOK_URL`, `TELEGRAM_BOT_TOKEN`, or `TELEGRAM_CHAT_ID` are not set.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GF_ADMIN_USER` | Grafana Admin Username | `admin` |
+| `GF_ADMIN_PASSWORD` | Grafana Admin Password | `admin` |
+| `PROMETHEUS_SCRAPE_INTERVAL` | Metric collection frequency | `15s` |
+| `MSTEAMS_WEBHOOK_URL` | Integration URL for MS Teams | `(dummy)` |
 
-### 3. Local dev overrides (optional)
+---
 
-Copy the override example to customize settings for local development without modifying the main config:
+## 🔔 Setting Up Alerts
 
-```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
-```
+By default, only the **MS Teams** receiver is active (with a dummy URL). To enable other platforms:
 
-Docker Compose automatically merges `docker-compose.override.yml` when running `docker-compose up`. This file is gitignored so local changes stay local.
+1. Open `alertmanager/alertmanager.yml`.
+2. Locate the receiver section for your platform (e.g., `# 🟠 Telegram`).
+3. **Uncomment** the receiver block and update the `route` section to use that receiver.
+4. Add your API keys/IDs to the `.env` file.
+5. Run `make deploy` to apply changes.
 
-### 4. Install pre-commit hooks (optional but recommended)
+---
 
-```bash
-pip install pre-commit
-pre-commit install
-```
+## 💾 Persistence & Backup
 
-This runs YAML linting and secret detection on every commit.
+Data is stored in **Named Docker Volumes** for high performance and isolation:
+- `prometheus_data`: Stores all time-series metric data.
+- `grafana_data`: Stores dashboards, users, and plugin settings.
 
-### 4. Start the stack
+> [!CAUTION]
+> Running `docker compose down -v` will **permanently delete** your volumes. Use `make clean` (which maps to `docker compose down`) to stop services safely without losing data.
 
-```bash
-docker-compose up -d
-```
+---
 
-Access Grafana at `http://localhost:3000` with the credentials from your `.env`.
+## 🛠️ Maintenance
 
-## Dashboard
+Common tasks via `Makefile`:
 
-Grafana auto-provisions the **Server Overview** dashboard with 6 panels:
+- `make up`: Build images and start the stack in detached mode.
+- `make down`: Stop services and remove containers (data volumes are **preserved**).
+- `make purge`: Stop services and remove containers **and volumes** (⚠️ permanently deletes all data).
+- `make lint`: Run pre-commit hooks (security scan, YAML linting).
 
-| Panel | Type |
-| --- | --- |
-| CPU Usage (%) | Time series |
-| Memory Usage (%) | Time series |
-| Disk Usage (%) | Gauge |
-| Network I/O (bytes/s) | Time series |
-| System Load Average | Time series |
-| System Uptime | Stat |
+---
 
-## Alert Rules
+## 🛡️ Security
 
-| Alert | Condition | Severity | For |
-| --- | --- | --- | --- |
-| InstanceDown | `up == 0` | critical | 1m |
-| HighCpuUsage | CPU > `ALERT_CPU_THRESHOLD` | warning | 5m |
-| HighMemoryUsage | Memory > `ALERT_MEMORY_THRESHOLD` | warning | 5m |
-| HighDiskUsage | Disk > `ALERT_DISK_THRESHOLD` | warning | 10m |
-| DiskWillFillIn4Hours | Predicted full within 4h | critical | 5m |
+This stack includes:
+- **Trivy Scans**: Automated vulnerability scanning on every PR.
+- **Gitleaks**: Native protection against committing sensitive credentials.
+- **Rootless (Optional)**: While running as root for initial debug, Dockerfiles support dropping privileges to the `prometheus`/`grafana` users.
 
-## Alert Routing
-
-| Severity | Receivers |
-| --- | --- |
-| default | MS Teams |
-| critical | MS Teams + Telegram |
-| warning | Telegram |
-
-Slack and Email receivers are pre-configured but not in the default route. Add them to `alertmanager/alertmanager.yml` routes as needed.
-
-## Troubleshooting
-
-### Alerts not being delivered
-
-- Verify `.env` exists and all required variables are set
-- Check Alertmanager logs: `docker logs alertmanager`
-- Inspect active alerts: `http://localhost:9093`
-
-### Cannot access Grafana
-
-- Wait ~15 seconds after `docker-compose up` for Grafana to initialize
-- Check logs: `docker logs grafana`
-- Verify `GF_ADMIN_USER` and `GF_ADMIN_PASSWORD` are set in `.env`
-
-### Prometheus not seeing metrics
-
-- Check scrape targets: `http://localhost:9090/targets`
-- Check node-exporter logs: `docker logs node-exporter`
-
-### Service not starting
-
-```bash
-docker-compose ps           # check status of all services
-docker-compose logs -f      # stream logs in real time
-docker-compose down && docker-compose up -d  # restart the stack
-```
+---
+*Created with ❤️ by the Devsiam Team.*
