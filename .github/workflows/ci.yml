@@ -7,74 +7,55 @@ on:
     branches: [master]
 
 jobs:
-  lint:
-    name: Lint & pre-commit
+  lint-and-scan:
+    name: Lint & Security Scan
     runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Cache pre-commit environments
+      - name: Cache pre-commit
         uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-          restore-keys: pre-commit-
 
-      - name: Run pre-commit hooks
-        uses: pre-commit/action@v3.0.1
+      - name: Run pre-commit
+        run: |
+          pip install pre-commit detect-secrets
+          pre-commit run --all-files
 
-  validate-compose:
-    name: Validate Docker Compose
+  validate-stack:
+    name: Validate Monitoring Stack
     runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate dummy .env for validation
+      - name: Generate dummy .env
         run: |
-          cat > .env << 'EOF'
-          GF_ADMIN_USER=admin
-          GF_ADMIN_PASSWORD=ci-dummy-password
-          MSTEAMS_WEBHOOK_URL=https://dummy.webhook.url/ci
-          TELEGRAM_BOT_TOKEN=0000000000:ci-dummy-token
-          TELEGRAM_CHAT_ID=000000000
-          PROMETHEUS_RETENTION=15d
-          PROMETHEUS_SCRAPE_INTERVAL=15s
-          PROMETHEUS_EVALUATION_INTERVAL=15s
-          ALERT_CPU_THRESHOLD=90
-          ALERT_MEMORY_THRESHOLD=90
-          ALERT_DISK_THRESHOLD=85
-          SLACK_WEBHOOK_URL=https://hooks.slack.com/ci-dummy
-          SLACK_CHANNEL=#alerts
-          SMTP_HOST=smtp.example.com:587
-          SMTP_FROM=alert@example.com
-          SMTP_USER=alert@example.com
-          SMTP_PASSWORD=ci-dummy-smtp
-          ALERT_EMAIL_TO=ops@example.com
-          LINE_WEBHOOK_URL=https://dummy.line-proxy.example.com/notify
-          EOF
+          cp .env.example .env
+          sed -i 's/your_bot_token/dummy/g' .env
+          sed -i 's/your_chat_id/0/g' .env
 
       - name: Validate docker-compose config
         run: docker compose config --quiet
 
-      - name: Expand env vars in configs
+      - name: Validate Prometheus config
         run: |
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
-          envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
-
-      - name: Validate Prometheus config
-        uses: docker://prom/prometheus:v3.11.1
-        with:
-          entrypoint: /bin/promtool
-          args: check config /tmp/prometheus.yml
+          docker run --rm \
+            -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml \
+            prom/prometheus:v3.11.1 check config /etc/prometheus/prometheus.yml
 
       - name: Validate Alertmanager config
-        uses: docker://prom/alertmanager:v0.32.0
-        with:
-          entrypoint: /bin/amtool
-          args: check-config /tmp/alertmanager.yml
+        run: |
+          envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+          docker run --rm \
+            -v /tmp/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
+            prom/alertmanager:v0.32.0 check-config /etc/alertmanager/alertmanager.yml

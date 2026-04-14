@@ -1,0 +1,21 @@
+---
+extends: default
+
+rules:
+  # --- files in this project don't use document-start (---)
+  document-start: disable
+
+  # --- config files routinely exceed 80 chars (PromQL expressions, URLs)
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+
+  # --- GitHub Actions uses 'on:' as a key; allow it alongside true/false
+  truthy:
+    allowed-values: ["true", "false", "on"]
+    check-keys: false
+
+  # --- comment style is a preference, not a correctness issue
+  comments: disable
+  comments-indentation: disable
