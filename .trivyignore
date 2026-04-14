@@ -1,0 +1,2 @@
+# Trivy ignore file
+# Add CVE IDs here (one per line) if they are false positives or acceptable risks.

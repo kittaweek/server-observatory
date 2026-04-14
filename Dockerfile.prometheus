@@ -1,0 +1,26 @@
+FROM prom/prometheus:v3.11.1 AS base
+
+FROM alpine:3.21
+RUN apk add --no-cache gettext libintl wget ca-certificates
+COPY --from=base /bin/prometheus /bin/prometheus
+COPY --from=base /bin/promtool /bin/promtool
+
+# Create prometheus user/group
+RUN addgroup -S prometheus && adduser -S prometheus -G prometheus
+
+RUN mkdir -p /prometheus /etc/prometheus && \
+    chown -R prometheus:prometheus /prometheus /etc/prometheus
+
+USER prometheus
+WORKDIR /prometheus
+
+EXPOSE 9090
+VOLUME [ "/prometheus" ]
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1
+
+ENTRYPOINT [ "/bin/prometheus" ]
+CMD [ "--config.file=/etc/prometheus/prometheus.yml", \
+      "--storage.tsdb.path=/prometheus" ]

@@ -1,0 +1,33 @@
+# Stage 1: Pull official binaries
+FROM prom/alertmanager:v0.32.0 AS upstream
+
+# Stage 2: Run on patched Alpine to allow system package upgrades
+FROM alpine:3.21
+
+# Upgrade system packages to patch CVEs
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates tzdata wget gettext libintl
+
+# Create non-root user
+RUN addgroup -S alertmanager && adduser -S alertmanager -G alertmanager
+
+# Copy binaries from official image
+COPY --from=upstream /bin/alertmanager /bin/alertmanager
+COPY --from=upstream /bin/amtool /bin/amtool
+
+# Setup storage
+RUN mkdir -p /alertmanager && \
+    chown -R alertmanager:alertmanager /alertmanager
+
+USER alertmanager
+WORKDIR /alertmanager
+
+EXPOSE 9093
+VOLUME ["/alertmanager"]
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:9093/-/healthy || exit 1
+
+ENTRYPOINT ["/bin/alertmanager"]
+CMD ["--config.file=/etc/alertmanager/alertmanager.yml", \
+     "--storage.path=/alertmanager"]

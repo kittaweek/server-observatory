@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [master, dev]
+  # pull_request:
+  #   branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-scan:
+    name: Lint & Security Scan
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit
+        run: |
+          pip install pre-commit detect-secrets
+          pre-commit run --all-files
+
+  validate-stack:
+    name: Validate Monitoring Stack
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate dummy .env
+        run: |
+          cp .env.example .env
+          sed -i 's/your_bot_token/dummy/g' .env
+          sed -i 's/your_chat_id/0/g' .env
+
+      - name: Validate docker-compose config
+        run: docker compose config --quiet
+
+      - name: Validate Prometheus config
+        run: |
+          export $(grep -v '^#' .env | xargs)
+          envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
+          docker run --rm \
+            --entrypoint promtool \
+            -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml \
+            prom/prometheus:v3.11.1 check config /etc/prometheus/prometheus.yml
+
+      - name: Validate Alertmanager config
+        run: |
+          export $(grep -v '^#' .env | xargs)
+          envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
+          docker run --rm \
+            --entrypoint amtool \
+            -v /tmp/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
+            prom/alertmanager:v0.32.0 check-config /etc/alertmanager/alertmanager.yml
