@@ -2,8 +2,6 @@
 
 A professional, minimal, and fully-containerized monitoring stack based on **Prometheus**, **Grafana**, and **Alertmanager**. Designed for high-reliability server monitoring with modern security practices.
 
-![Grafana Dashboard Example](https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg) <!-- Placeholder for actual screenshot later -->
-
 ## 🚀 Quick Start
 
 1. **Clone and Setup**:
@@ -58,7 +56,7 @@ By default, only the **MS Teams** receiver is active (with a dummy URL). To enab
 2. Locate the receiver section for your platform (e.g., `# 🟠 Telegram`).
 3. **Uncomment** the receiver block and update the `route` section to use that receiver.
 4. Add your API keys/IDs to the `.env` file.
-5. Run `make deploy` to apply changes.
+5. Run `make up` to apply changes.
 
 ---
 
@@ -69,7 +67,7 @@ Data is stored in **Named Docker Volumes** for high performance and isolation:
 - `grafana_data`: Stores dashboards, users, and plugin settings.
 
 > [!CAUTION]
-> Running `docker compose down -v` will **permanently delete** your volumes. Use `make clean` (which maps to `docker compose down`) to stop services safely without losing data.
+> Running `docker compose down -v` will **permanently delete** your volumes. Use `make down` to stop services safely without losing data, or `make purge` only when you intentionally want to wipe all data.
 
 ---
 
