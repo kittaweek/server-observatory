@@ -58,5 +58,6 @@ jobs:
         run: |
           envsubst < alertmanager/alertmanager.yml > /tmp/alertmanager.yml
           docker run --rm \
+            --entrypoint amtool \
             -v /tmp/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
             prom/alertmanager:v0.32.0 check-config /etc/alertmanager/alertmanager.yml
