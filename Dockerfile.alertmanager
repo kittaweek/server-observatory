@@ -2,7 +2,7 @@
 FROM prom/alertmanager:v0.32.0 AS upstream
 
 # Stage 2: Run on patched Alpine to allow system package upgrades
-FROM alpine:3.21
+FROM alpine:3.23
 
 # Upgrade system packages to patch CVEs
 RUN apk update && apk upgrade --no-cache && \
