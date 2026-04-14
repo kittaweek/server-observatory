@@ -89,7 +89,7 @@ Common tasks via `Makefile`:
 This stack includes:
 - **Trivy Scans**: Automated vulnerability scanning on every PR.
 - **Gitleaks**: Native protection against committing sensitive credentials.
-- **Rootless (Optional)**: While running as root for initial debug, Dockerfiles support dropping privileges to the `prometheus`/`grafana` users.
+- **Rootless**: All services run as dedicated non-root users (`prometheus`, `alertmanager`, `grafana`) as defined in each Dockerfile.
 
 ---
 *Created with ❤️ by the Devsiam Team.*
