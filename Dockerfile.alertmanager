@@ -1,28 +1,55 @@
-FROM golang:1.24-alpine AS build
+# Stage 1: Builder
+FROM golang:1.24-alpine AS builder
+RUN apk add --no-cache git gcc musl-dev make
 
-# Install build dependencies
-RUN apk add --no-cache git gcc musl-dev nodejs npm
+WORKDIR /src
 
-# Clone Alertmanager source
-RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git /go/src/github.com/prometheus/alertmanager
-WORKDIR /go/src/github.com/prometheus/alertmanager
+# clone source
+RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git .
 
-# Build UI assets first
-RUN npm install && npm run build
+# Patch dependencies (optional)
+# RUN go mod edit -dropreplace go.opentelemetry.io/otel/sdk && \
+#     go get go.opentelemetry.io/otel/sdk@v1.43.0 && \
+#     go mod tidy
 
-# Update dependencies
-RUN go mod edit -dropreplace go.opentelemetry.io/otel/sdk && \
-    go get go.opentelemetry.io/otel/sdk@v1.43.0 && \
-    go mod tidy
+# Build binaries
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-s -w" \
+    -o /bin/alertmanager ./cmd/alertmanager
 
-# Build the binaries
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/alertmanager ./cmd/alertmanager
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/amtool ./cmd/amtool
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-s -w" \
+    -o /bin/amtool ./cmd/amtool
 
-# Create the final image
-FROM prom/alertmanager:v0.32.0
-COPY --from=build /bin/alertmanager /bin/alertmanager
-COPY --from=build /bin/amtool /bin/amtool
 
+# Stage 2: Final Image
+FROM alpine:3.21
+
+# Update & install minimal deps
+RUN apk update && apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates tzdata wget gettext libintl
+
+# Create non-root user
+RUN addgroup -S alertmanager && adduser -S alertmanager -G alertmanager
+
+# Copy binaries
+COPY --from=builder /bin/alertmanager /bin/alertmanager
+COPY --from=builder /bin/amtool /bin/amtool
+
+# Setup storage
+RUN mkdir -p /alertmanager && \
+    chown -R alertmanager:alertmanager /alertmanager
+
+USER alertmanager
+WORKDIR /alertmanager
+
+EXPOSE 9093
+VOLUME [ "/alertmanager" ]
+
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:9093/-/healthy || exit 1
+
+ENTRYPOINT [ "/bin/alertmanager" ]
+CMD [ "--config.file=/etc/alertmanager/alertmanager.yml", \
+      "--storage.path=/alertmanager" ]

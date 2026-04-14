@@ -1,0 +1,4 @@
+ignore:
+  # DL3018: Pinning apk package versions is impractical — Alpine package
+  # versions change with each release and are not stable across mirrors.
+  - DL3018

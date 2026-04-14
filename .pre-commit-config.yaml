@@ -56,7 +56,14 @@ repos:
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
-      - id: hadolint
+      - id: hadolint-docker
+        args:
+          # DL3018: Pinning apk versions is impractical — versions change
+          # with each Alpine release and are not stable across mirrors.
+          - --ignore=DL3018
+          # Only fail on warnings and above; info-level suggestions (e.g.
+          # DL3059 consecutive RUN) are advisory and should not block commits.
+          - --failure-threshold=warning
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.4
