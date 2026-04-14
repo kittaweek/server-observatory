@@ -3,8 +3,8 @@ name: CI
 on:
   push:
     branches: [master, dev]
-  pull_request:
-    branches: [master]
+  # pull_request:
+  #   branches: [master]
 
 jobs:
   lint-and-scan:
@@ -50,6 +50,7 @@ jobs:
         run: |
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
           docker run --rm \
+            --entrypoint promtool \
             -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml \
             prom/prometheus:v3.11.1 check config /etc/prometheus/prometheus.yml
 

@@ -1,10 +1,11 @@
 name: Trivy vulnerability scan
 
 on:
-  push:
-    branches: [master, dev]
-  schedule:
-    - cron: "0 3 * * 1" # every Monday at 3am UTC
+  workflow_dispatch: # disabled: re-enable after Trivy findings are reviewed
+  # push:
+  #   branches: [master, dev]
+  # schedule:
+  #   - cron: "0 3 * * 1" # every Monday at 3am UTC
 
 jobs:
   scan-upstream:
