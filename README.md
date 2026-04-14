@@ -19,7 +19,7 @@ A professional, minimal, and fully-containerized monitoring stack based on **Pro
    ```
 
 3. **Access** (localhost only by default):
-   - **Grafana**: `http://localhost:3000`
+   - **Grafana**: `http://localhost:3000` (login with credentials from `.env`)
    - **Prometheus**: `http://localhost:9090`
    - **Alertmanager**: `http://localhost:9093`
 
@@ -43,8 +43,8 @@ Edit the `.env` file to customize your stack. The system is designed with "Soft-
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `GF_ADMIN_USER` | Grafana Admin Username | `admin` |
-| `GF_ADMIN_PASSWORD` | Grafana Admin Password | `admin` |
+| `GF_ADMIN_USER` | Grafana Admin Username | **required** |
+| `GF_ADMIN_PASSWORD` | Grafana Admin Password | **required** |
 | `PROMETHEUS_SCRAPE_INTERVAL` | Metric collection frequency | `15s` |
 | `MSTEAMS_WEBHOOK_URL` | Integration URL for MS Teams | `(dummy)` |
 
