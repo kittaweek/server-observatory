@@ -6,17 +6,27 @@ A professional, minimal, and fully-containerized monitoring stack based on **Pro
 
 1. **Clone and Setup**:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/kittaweek/server-observatory.git
    cd server-observatory
    cp .env.example .env
    ```
 
-2. **Deploy**:
+2. **Edit `.env`** and fill in your credentials:
+   ```bash
+   # Required
+   GF_ADMIN_USER=admin
+   GF_ADMIN_PASSWORD=your_secure_password
+
+   # Set at least one alert channel, e.g. MS Teams:
+   MSTEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/...
+   ```
+
+3. **Deploy**:
    ```bash
    make up
    ```
 
-3. **Access** (localhost only by default):
+4. **Access** (localhost only by default):
    - **Grafana**: `http://localhost:3000` (login with credentials from `.env`)
    - **Prometheus**: `http://localhost:9090`
    - **Alertmanager**: `http://localhost:9093`
@@ -37,7 +47,7 @@ A professional, minimal, and fully-containerized monitoring stack based on **Pro
 
 ## ⚙️ Configuration (.env)
 
-Edit the `.env` file to customize your stack. The system is designed with "Soft-defaults" — if you leave a variable empty, it will use a safe default instead of failing.
+Edit the `.env` file to customize your stack. `GF_ADMIN_USER` and `GF_ADMIN_PASSWORD` are **required** — the stack will not start without them. Other variables have safe defaults built into the entrypoint scripts.
 
 | Variable | Description | Default |
 |----------|-------------|---------|
