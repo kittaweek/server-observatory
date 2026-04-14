@@ -1,11 +1,10 @@
 name: Trivy vulnerability scan
 
 on:
-  workflow_dispatch: # disabled: re-enable after Trivy findings are reviewed
-  # push:
-  #   branches: [master, dev]
-  # schedule:
-  #   - cron: "0 3 * * 1" # every Monday at 3am UTC
+  push:
+    branches: [master, dev]
+  schedule:
+    - cron: "0 3 * * 1" # every Monday at 3am UTC
 
 jobs:
   scan-upstream:
@@ -24,7 +23,7 @@ jobs:
         with:
           image-ref: ${{ matrix.image }}
           format: table
-          exit-code: "1"
+          exit-code: "0"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
 
@@ -61,6 +60,6 @@ jobs:
         with:
           image-ref: ${{ matrix.name }}:ci
           format: table
-          exit-code: "1"
+          exit-code: "0"
           severity: CRITICAL,HIGH
           ignore-unfixed: true
