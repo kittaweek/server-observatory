@@ -1,40 +1,19 @@
-# Stage 1: Builder
-FROM golang:1.24-alpine AS builder
-RUN apk add --no-cache git gcc musl-dev make
+# Stage 1: Pull official binaries
+FROM prom/alertmanager:v0.32.0 AS upstream
 
-WORKDIR /src
-
-# clone source
-RUN git clone --branch v0.32.0 https://github.com/prometheus/alertmanager.git .
-
-# Patch dependencies (optional)
-# RUN go mod edit -dropreplace go.opentelemetry.io/otel/sdk && \
-#     go get go.opentelemetry.io/otel/sdk@v1.43.0 && \
-#     go mod tidy
-
-# Build binaries
-RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w" \
-    -o /bin/alertmanager ./cmd/alertmanager
-
-RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w" \
-    -o /bin/amtool ./cmd/amtool
-
-
-# Stage 2: Final Image
+# Stage 2: Run on patched Alpine to allow system package upgrades
 FROM alpine:3.21
 
-# Update & install minimal deps
+# Upgrade system packages to patch CVEs
 RUN apk update && apk upgrade --no-cache && \
     apk add --no-cache ca-certificates tzdata wget gettext libintl
 
 # Create non-root user
 RUN addgroup -S alertmanager && adduser -S alertmanager -G alertmanager
 
-# Copy binaries
-COPY --from=builder /bin/alertmanager /bin/alertmanager
-COPY --from=builder /bin/amtool /bin/amtool
+# Copy binaries from official image
+COPY --from=upstream /bin/alertmanager /bin/alertmanager
+COPY --from=upstream /bin/amtool /bin/amtool
 
 # Setup storage
 RUN mkdir -p /alertmanager && \
@@ -44,12 +23,11 @@ USER alertmanager
 WORKDIR /alertmanager
 
 EXPOSE 9093
-VOLUME [ "/alertmanager" ]
+VOLUME ["/alertmanager"]
 
-# Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:9093/-/healthy || exit 1
 
-ENTRYPOINT [ "/bin/alertmanager" ]
-CMD [ "--config.file=/etc/alertmanager/alertmanager.yml", \
-      "--storage.path=/alertmanager" ]
+ENTRYPOINT ["/bin/alertmanager"]
+CMD ["--config.file=/etc/alertmanager/alertmanager.yml", \
+     "--storage.path=/alertmanager"]
