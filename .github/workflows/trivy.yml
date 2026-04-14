@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "0 3 * * 1" # every Monday at 3am UTC
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan-upstream:
     name: Scan upstream images
