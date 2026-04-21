@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/kittaweek/server-observatory/discussions
+    about: Open a discussion for usage questions or design ideas.

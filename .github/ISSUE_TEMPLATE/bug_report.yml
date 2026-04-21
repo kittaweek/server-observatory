@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a problem with the Server Observatory stack
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Please fill in as much
+        detail as you can so we can reproduce the issue.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: Tell us what you saw…
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps so we can recreate the issue locally.
+      placeholder: |
+        1. `cp .env.example .env`
+        2. `make up`
+        3. Observe …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Git commit / tag
+      description: Output of `git rev-parse --short HEAD` or the tag you're running.
+      placeholder: e.g. v1.2.0 or a3f4c21
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        - Host OS + version
+        - `docker --version` and `docker compose version`
+        - Relevant `.env` overrides (redact secrets!)
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant output from `make logs` (redact secrets).
+      render: shell

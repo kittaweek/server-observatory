@@ -15,10 +15,13 @@ service-account*.json
 docker-compose.override.yml
 docker-compose.*.local.yml
 
-# Docker volume data
+# Docker volume data (legacy named volumes)
 prometheus_data/
 grafana_data/
-data/
+
+# Persistent bind-mount data — keep folder structure but ignore contents
+/data/*/*
+!/data/*/.gitkeep
 
 # Temp/editor files
 *.swp

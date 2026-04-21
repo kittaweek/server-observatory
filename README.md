@@ -72,12 +72,40 @@ By default, only the **MS Teams** receiver is active (with a dummy URL). To enab
 
 ## 💾 Persistence & Backup
 
-Data is stored in **Named Docker Volumes** for high performance and isolation:
-- `prometheus_data`: Stores all time-series metric data.
-- `grafana_data`: Stores dashboards, users, and plugin settings.
+Data is stored via **bind-mounts** under `./data/` so it's easy to back up,
+inspect, and migrate:
+
+- `./data/prometheus/` — time-series metric data
+- `./data/grafana/` — dashboards, users, and plugin settings
+
+The `./data/` tree is gitignored (only `.gitkeep` placeholders are tracked).
+Back up with any standard tool, e.g. `tar czf backup.tgz data/`.
 
 > [!CAUTION]
-> Running `docker compose down -v` will **permanently delete** your volumes. Use `make down` to stop services safely without losing data, or `make purge` only when you intentionally want to wipe all data.
+> Running `make purge` will **permanently delete** everything under `./data/`.
+> Use `make down` to stop services safely without losing data.
+
+### Migrating from named volumes (legacy layout)
+
+Older versions of this stack used Docker named volumes (`prometheus_data`,
+`grafana_data`). To migrate existing data:
+
+```bash
+# 1. Stop the stack (data is preserved in named volumes)
+make down
+
+# 2. Copy data out of the named volumes into the new bind-mount paths
+docker run --rm -v prometheus_data:/from -v $(pwd)/data/prometheus:/to \
+  alpine sh -c "cp -a /from/. /to/"
+docker run --rm -v grafana_data:/from -v $(pwd)/data/grafana:/to \
+  alpine sh -c "cp -a /from/. /to/"
+
+# 3. Pull the latest version and start again
+git pull && make up
+
+# 4. Once verified healthy, remove the legacy named volumes
+docker volume rm prometheus_data grafana_data
+```
 
 ---
 

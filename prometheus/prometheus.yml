@@ -16,7 +16,30 @@ scrape_configs:
     static_configs:
       - targets: ['prometheus:9090']
 
-  # Internal: Monitor Node Exporter
+  # Internal: Monitor the local Node Exporter container. The MONITORING_SERVER_NAME
+  # variable is surfaced as a `nodename` label so it's visible in the Node Exporter
+  # Full dashboard when you run multiple observatory instances.
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: node_uname_info
+        target_label: nodename
+        replacement: ${MONITORING_SERVER_NAME}
+
+  # Template: Monitor remote servers via node-exporter.
+  # Uncomment this job and fill TARGET_1_* (and additional slots) in `.env`.
+  # Each target becomes a labeled instance, which you can route on in
+  # alertmanager (e.g. by `team` or `env`).
+  #
+  # - job_name: 'servers'
+  #   static_configs:
+  #     - targets: ['${TARGET_1_ADDR}']
+  #       labels:
+  #         instance: '${TARGET_1_NAME}'
+  #   metric_relabel_configs:
+  #     - source_labels: [__name__, instance]
+  #       regex: 'node_uname_info;(.*)'
+  #       target_label: nodename
+  #       replacement: '$1'
