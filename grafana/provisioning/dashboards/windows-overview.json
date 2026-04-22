@@ -62,7 +62,7 @@
       "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
       "title": "Memory Usage",
       "type": "stat",
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (windows_os_physical_memory_free_bytes{instance=~\"$instance\"} / windows_cs_physical_memory_bytes{instance=~\"$instance\"} * 100)", "legendFormat": "{{instance}}", "refId": "A" }]
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (windows_memory_physical_free_bytes{instance=~\"$instance\"} / windows_memory_physical_total_bytes{instance=~\"$instance\"} * 100)", "legendFormat": "{{instance}}", "refId": "A" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -110,7 +110,7 @@
       "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi", "sort": "none" } },
       "title": "Memory Usage (%)",
       "type": "timeseries",
-      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (windows_os_physical_memory_free_bytes{instance=~\"$instance\"} / windows_cs_physical_memory_bytes{instance=~\"$instance\"} * 100)", "legendFormat": "{{instance}}", "refId": "A" }]
+      "targets": [{ "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "100 - (windows_memory_physical_free_bytes{instance=~\"$instance\"} / windows_memory_physical_total_bytes{instance=~\"$instance\"} * 100)", "legendFormat": "{{instance}}", "refId": "A" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },

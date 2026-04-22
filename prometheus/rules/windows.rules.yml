@@ -27,8 +27,8 @@ groups:
 
       - alert: WindowsHighMemoryUsage
         expr: >-
-          100 - (windows_os_physical_memory_free_bytes
-          / windows_cs_physical_memory_bytes * 100)
+          100 - (windows_memory_physical_free_bytes
+          / windows_memory_physical_total_bytes * 100)
           > ${ALERT_MEMORY_THRESHOLD}
         for: 5m
         labels:
