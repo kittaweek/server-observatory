@@ -2,7 +2,7 @@ groups:
   - name: node-alerts
     rules:
       - alert: InstanceDown
-        expr: up == 0
+        expr: up{job=~"node-exporter|linux"} == 0
         for: 1m
         labels:
           severity: critical
@@ -40,8 +40,9 @@ groups:
 
       - alert: HighDiskUsage
         expr: >-
-          (node_filesystem_size_bytes - node_filesystem_free_bytes)
-          / node_filesystem_size_bytes * 100 > ${ALERT_DISK_THRESHOLD}
+          (node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}
+          - node_filesystem_free_bytes{fstype!~"tmpfs|overlay"})
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} * 100 > ${ALERT_DISK_THRESHOLD}
         for: 10m
         labels:
           severity: warning

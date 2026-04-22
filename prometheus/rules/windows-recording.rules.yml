@@ -1,0 +1,27 @@
+groups:
+  - name: windows-recording
+    rules:
+      - record: windows:cpu:usage:rate5m
+        expr: >-
+          100 - (avg by(instance) (rate(windows_cpu_time_total{mode="idle"}[5m])) * 100)
+
+      - record: windows:memory:usage:percent
+        expr: >-
+          100 - (windows_memory_physical_free_bytes
+          / windows_memory_physical_total_bytes * 100)
+
+      - record: windows:disk:usage:percent
+        expr: >-
+          max by(instance) (
+            (windows_logical_disk_size_bytes{volume!~"HarddiskVolume.*"}
+             - windows_logical_disk_free_bytes{volume!~"HarddiskVolume.*"})
+            / windows_logical_disk_size_bytes{volume!~"HarddiskVolume.*"} * 100
+          )
+
+      - record: windows:network:receive:rate5m
+        expr: >-
+          rate(windows_net_bytes_received_total{nic!~".*isatap.*|.*teredo.*"}[5m])
+
+      - record: windows:network:transmit:rate5m
+        expr: >-
+          rate(windows_net_bytes_sent_total{nic!~".*isatap.*|.*teredo.*"}[5m])
