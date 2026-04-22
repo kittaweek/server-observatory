@@ -1,0 +1,14 @@
+# Linux hosts running node-exporter (:9100)
+# Add one entry per host. Prometheus reloads this file automatically.
+#
+# Labels:
+#   name  — human-readable hostname shown in Grafana
+#   env   — environment tag (prod / staging / dev)
+#
+# Example:
+# - targets: ['100.x.x.x:9100']
+#   labels:
+#     name: my-linux-server
+#     env: prod
+
+- targets: []

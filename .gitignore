@@ -1,15 +1,45 @@
-# Secrets
+# Secrets — never commit env files
 .env
-.env.local
+.env.*
+!.env.example
+*.env
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
 
 # Local dev overrides
 docker-compose.override.yml
+docker-compose.*.local.yml
 
-# Docker volume data
+# Docker volume data (legacy named volumes)
 prometheus_data/
 grafana_data/
 
+# Persistent bind-mount data — keep folder structure but ignore contents
+/data/*/*
+!/data/*/.gitkeep
+
 # Temp/editor files
 *.swp
+*.swo
 *.bak
 *.tmp
+*~
+
+# IDE / editor
+.idea/
+.vscode/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/

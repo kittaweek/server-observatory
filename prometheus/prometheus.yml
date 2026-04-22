@@ -16,7 +16,31 @@ scrape_configs:
     static_configs:
       - targets: ['prometheus:9090']
 
-  # Internal: Monitor Node Exporter
+  # Internal: Monitor the local Node Exporter container. The MONITORING_SERVER_NAME
+  # variable is surfaced as a `nodename` label so it's visible in the Node Exporter
+  # Full dashboard when you run multiple observatory instances.
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['node-exporter:9100']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: node_uname_info
+        target_label: nodename
+        replacement: ${MONITORING_SERVER_NAME}
+
+  # Remote Linux hosts (node-exporter :9100)
+  # Edit prometheus/targets/linux.yml to add/remove hosts.
+  # Prometheus reloads the file automatically — no restart needed.
+  - job_name: 'linux'
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/linux.yml
+        refresh_interval: 30s
+
+  # Remote Windows hosts (windows_exporter :9182)
+  # Edit prometheus/targets/windows.yml to add/remove hosts.
+  - job_name: 'windows'
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/windows.yml
+        refresh_interval: 30s

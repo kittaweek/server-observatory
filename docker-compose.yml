@@ -4,9 +4,9 @@ networks:
   observatory-net:
     driver: bridge
 
-volumes:
-  prometheus_data:
-  grafana_data:
+# Persistent data lives in bind-mounted folders under ./data/ so it's easy
+# to back up, inspect, and migrate. The `./data/` tree is gitignored.
+# See README for migration notes from the legacy named-volume layout.
 
 services:
   prometheus:
@@ -19,7 +19,7 @@ services:
       - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus:/etc/prometheus
-      - prometheus_data:/prometheus
+      - ./data/prometheus:/prometheus
     entrypoint: ["/bin/sh", "/etc/prometheus/entrypoint.sh"]
     networks:
       - observatory-net
@@ -29,7 +29,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
+      start_period: 40s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
     logging:
       driver: json-file
       options:
@@ -49,7 +55,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:?GF_ADMIN_PASSWORD is required. Please set it in .env}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
-      - grafana_data:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana
     networks:
       - observatory-net
     restart: unless-stopped
@@ -58,7 +64,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
+      start_period: 40s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
     logging:
       driver: json-file
       options:
@@ -84,7 +96,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
       interval: 30s
       timeout: 10s
+      start_period: 30s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
     logging:
       driver: json-file
       options:
@@ -111,7 +129,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/metrics"]
       interval: 30s
       timeout: 10s
+      start_period: 20s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64m
     logging:
       driver: json-file
       options:

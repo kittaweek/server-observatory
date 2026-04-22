@@ -11,20 +11,22 @@ export ALERT_CPU_THRESHOLD=${ALERT_CPU_THRESHOLD:-90}
 export ALERT_MEMORY_THRESHOLD=${ALERT_MEMORY_THRESHOLD:-90}
 export ALERT_DISK_THRESHOLD=${ALERT_DISK_THRESHOLD:-85}
 
+# Server identity (shown as `nodename` label in dashboards)
+export MONITORING_SERVER_NAME=${MONITORING_SERVER_NAME:-observatory}
+
 # 2. Define the whitelist for envsubst
 # We MUST whitelist to prevent envsubst from destroying Prometheus internal tags like $labels, $value, etc.
-VAR_LIST='$PROMETHEUS_SCRAPE_INTERVAL,$PROMETHEUS_EVALUATION_INTERVAL,$ALERT_CPU_THRESHOLD,$ALERT_MEMORY_THRESHOLD,$ALERT_DISK_THRESHOLD'
+VAR_LIST='$PROMETHEUS_SCRAPE_INTERVAL,$PROMETHEUS_EVALUATION_INTERVAL,$ALERT_CPU_THRESHOLD,$ALERT_MEMORY_THRESHOLD,$ALERT_DISK_THRESHOLD,$MONITORING_SERVER_NAME'
 
 echo "Expanding Prometheus configurations..."
 mkdir -p /tmp/rules
 
 envsubst "$VAR_LIST" < /etc/prometheus/prometheus.yml > /tmp/prometheus.yml
-envsubst "$VAR_LIST" < /etc/prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml
 
-# Copy static rule files
-if [ -f /etc/prometheus/rules/recording.rules.yml ]; then
-    cp /etc/prometheus/rules/recording.rules.yml /tmp/rules/
-fi
+# Expand all rule files — static ones are copied, templated ones get envsubst
+for f in /etc/prometheus/rules/*.rules.yml; do
+    envsubst "$VAR_LIST" < "$f" > "/tmp/rules/$(basename "$f")"
+done
 
 # 3. Start Prometheus
 echo "Starting Prometheus..."

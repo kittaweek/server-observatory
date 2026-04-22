@@ -1,0 +1,14 @@
+# Windows hosts running windows_exporter (:9182)
+# Add one entry per host. Prometheus reloads this file automatically.
+#
+# Labels:
+#   name  — human-readable hostname shown in Grafana
+#   env   — environment tag (prod / staging / dev)
+#
+# Example:
+# - targets: ['100.x.x.x:9182']
+#   labels:
+#     name: my-windows-pc
+#     env: prod
+
+- targets: []
