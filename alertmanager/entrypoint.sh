@@ -16,6 +16,7 @@ export SMTP_HOST=${SMTP_HOST:-"localhost:25"}
 export SMTP_USER=${SMTP_USER:-"user"}
 export SMTP_PASSWORD=${SMTP_PASSWORD:-"password"}
 export LINE_WEBHOOK_URL=${LINE_WEBHOOK_URL:-"http://localhost/dummy-line"}
+export LINE_WEBHOOK_TOKEN=${LINE_WEBHOOK_TOKEN:-"change_me_bearer_token"}
 
 # 2. Expand variables in the configuration file
 echo "Expanding environment variables in /etc/alertmanager/alertmanager.yml..."

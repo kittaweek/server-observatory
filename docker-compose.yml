@@ -29,7 +29,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
+      start_period: 40s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
     logging:
       driver: json-file
       options:
@@ -58,7 +64,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
+      start_period: 40s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
     logging:
       driver: json-file
       options:
@@ -84,7 +96,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
       interval: 30s
       timeout: 10s
+      start_period: 30s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128m
     logging:
       driver: json-file
       options:
@@ -111,7 +129,13 @@ services:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/metrics"]
       interval: 30s
       timeout: 10s
+      start_period: 20s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 64m
     logging:
       driver: json-file
       options:

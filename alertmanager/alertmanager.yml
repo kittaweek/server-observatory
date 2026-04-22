@@ -48,3 +48,6 @@ receivers:
   # - name: 'line'
   #   webhook_configs:
   #     - url: '${LINE_WEBHOOK_URL}'
+  #       http_config:
+  #         authorization:
+  #           credentials: '${LINE_WEBHOOK_TOKEN}'
