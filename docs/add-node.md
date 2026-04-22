@@ -1,12 +1,13 @@
-# Adding a remote host to monitor
+# Adding remote hosts to monitor
 
 By default, Server Observatory only scrapes the local `node-exporter`
-container. To monitor additional Linux hosts, you install `node_exporter`
-on each one and add it as a Prometheus target.
+container. To monitor additional hosts, install the appropriate exporter
+and add it to the relevant targets file — Prometheus reloads these files
+automatically, no restart needed.
 
-## 1. Install node_exporter on the remote host
+## Linux hosts (node_exporter)
 
-On the host you want to monitor:
+### 1. Install node_exporter on the remote host
 
 ```bash
 NE_VERSION=1.11.1
@@ -16,7 +17,7 @@ tar xzf /tmp/ne.tar.gz -C /tmp
 sudo install /tmp/node_exporter-${NE_VERSION}.linux-amd64/node_exporter /usr/local/bin/
 ```
 
-Create a systemd service (adjust user if you already have one):
+Create a systemd service:
 
 ```ini
 # /etc/systemd/system/node_exporter.service
@@ -36,76 +37,78 @@ WantedBy=multi-user.target
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now node_exporter
+curl -s http://localhost:9100/metrics | head -5   # verify
 ```
 
-Verify it's serving metrics:
+### 2. Make the port reachable from the observatory
 
-```bash
-curl -s http://localhost:9100/metrics | head -5
-```
+- **Private network / VPC** — open port `9100` in your firewall / security group.
+- **VPN mesh** (Tailscale / WireGuard) — use the mesh IP in the target entry.
+- **SSH tunnel** (ad-hoc) — `ssh -L 9100:localhost:9100 user@remote`.
 
-## 2. Make the port reachable from the observatory
+Do **not** expose `node_exporter` on the public internet without mTLS or an
+authenticated reverse proxy.
 
-You have a few options — pick whichever fits your network:
+### 3. Add the target to Prometheus
 
-- **Private network / VPC**: open port `9100` between the observatory host
-  and the target (security group, firewall rule, etc.).
-- **VPN mesh** (Tailscale / WireGuard): install the mesh client on both
-  ends and use the mesh IP in the target URL.
-- **SSH tunnel** (ad-hoc / single host): `ssh -L 9100:localhost:9100 user@remote`.
-
-Do **not** expose `node_exporter` on the public internet without mTLS or a
-reverse proxy with authentication.
-
-## 3. Add the target to Prometheus
-
-Edit `.env` on the observatory host and fill in one of the `TARGET_*`
-slots:
-
-```bash
-TARGET_1_ADDR=10.0.0.10:9100
-TARGET_1_NAME=web-server-1
-```
-
-Open `prometheus/prometheus.yml` and **uncomment** the `servers` job so it
-looks like:
+Edit `prometheus/targets/linux.yml` on the observatory host:
 
 ```yaml
-  - job_name: 'servers'
-    static_configs:
-      - targets: ['${TARGET_1_ADDR}']
-        labels:
-          instance: '${TARGET_1_NAME}'
-    metric_relabel_configs:
-      - source_labels: [__name__, instance]
-        regex: 'node_uname_info;(.*)'
-        target_label: nodename
-        replacement: '$1'
+- targets: ['10.0.0.10:9100']
+  labels:
+    name: web-server-1
+    env: prod
 ```
 
-## 4. Apply the change
+Prometheus picks up the change within 30 seconds — no restart needed.
+Confirm the target is `UP` at <http://localhost:9090/targets>.
 
-```bash
-make up   # rebuilds prometheus with the updated template
+### 4. Adding more Linux hosts
+
+Just append more entries to the same file:
+
+```yaml
+- targets: ['10.0.0.10:9100']
+  labels:
+    name: web-server-1
+    env: prod
+
+- targets: ['10.0.0.11:9100']
+  labels:
+    name: db-server-1
+    env: prod
 ```
 
-Confirm the new target is `UP` at <http://localhost:9090/targets>.
+---
 
-## 5. Adding more targets
+## Windows hosts (windows_exporter)
 
-To monitor a second host, extend the entrypoint whitelist and add another
-block:
+### 1. Install windows_exporter on the Windows host
 
-1. In `.env`, add:
-   ```bash
-   TARGET_2_ADDR=10.0.0.11:9100
-   TARGET_2_NAME=db-server-1
-   ```
-2. In `prometheus/entrypoint.sh`, add exports with defaults and append
-   `$TARGET_2_ADDR,$TARGET_2_NAME` to `VAR_LIST`.
-3. In `prometheus/prometheus.yml`, add a second target under the same job
-   (or a new job if the hosts serve different roles / teams).
+Download the latest MSI from
+<https://github.com/prometheus-community/windows_exporter/releases> and
+run it. The default install exposes metrics at `:9182`.
 
-If you end up with many hosts, consider using Prometheus
-[file_sd_configs](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#file_sd_config)
-or a service discovery integration instead of listing targets inline.
+To enable additional collectors (e.g. process, tcp, time) pass them at
+install time or via the service arguments:
+
+```powershell
+windows_exporter.exe --collectors.enabled="cpu,memory,net,logical_disk,physical_disk,os,system,service,process,tcp"
+```
+
+### 2. Make port 9182 reachable
+
+Same options as Linux — VPN mesh is recommended for Windows hosts.
+
+### 3. Add the Windows target to Prometheus
+
+Edit `prometheus/targets/windows.yml`:
+
+```yaml
+- targets: ['10.0.0.20:9182']
+  labels:
+    name: workstation-1
+    env: prod
+```
+
+Prometheus reloads within 30 seconds. Check <http://localhost:9090/targets>.
