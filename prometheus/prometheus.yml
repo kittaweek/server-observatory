@@ -28,18 +28,19 @@ scrape_configs:
         target_label: nodename
         replacement: ${MONITORING_SERVER_NAME}
 
-  # Template: Monitor remote servers via node-exporter.
-  # Uncomment this job and fill TARGET_1_* (and additional slots) in `.env`.
-  # Each target becomes a labeled instance, which you can route on in
-  # alertmanager (e.g. by `team` or `env`).
-  #
-  # - job_name: 'servers'
-  #   static_configs:
-  #     - targets: ['${TARGET_1_ADDR}']
-  #       labels:
-  #         instance: '${TARGET_1_NAME}'
-  #   metric_relabel_configs:
-  #     - source_labels: [__name__, instance]
-  #       regex: 'node_uname_info;(.*)'
-  #       target_label: nodename
-  #       replacement: '$1'
+  # Remote Linux hosts (node-exporter :9100)
+  # Edit prometheus/targets/linux.yml to add/remove hosts.
+  # Prometheus reloads the file automatically — no restart needed.
+  - job_name: 'linux'
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/linux.yml
+        refresh_interval: 30s
+
+  # Remote Windows hosts (windows_exporter :9182)
+  # Edit prometheus/targets/windows.yml to add/remove hosts.
+  - job_name: 'windows'
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/windows.yml
+        refresh_interval: 30s
