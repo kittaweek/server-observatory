@@ -35,8 +35,7 @@
           "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
           "legendFormat": "{{instance}}"
         }
-      ],
-      "description": "% CPU \u0e17\u0e35\u0e48\u0e16\u0e39\u0e01\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e22\u0e01\u0e15\u0e32\u0e21 instance \u0e04\u0e33\u0e19\u0e27\u0e13\u0e08\u0e32\u0e01 100% - idle time \u0e16\u0e49\u0e32\u0e2a\u0e39\u0e07\u0e40\u0e01\u0e34\u0e19 80% \u0e15\u0e48\u0e2d\u0e40\u0e19\u0e37\u0e48\u0e2d\u0e07\u0e04\u0e27\u0e23\u0e15\u0e23\u0e27\u0e08\u0e2a\u0e2d\u0e1a process \u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49 CPU \u0e2a\u0e39\u0e07"
+      ]
     },
     {
       "id": 2,
@@ -54,8 +53,7 @@
           "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
           "legendFormat": "{{instance}}"
         }
-      ],
-      "description": "% RAM \u0e17\u0e35\u0e48\u0e16\u0e39\u0e01\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e41\u0e22\u0e01\u0e15\u0e32\u0e21 instance \u0e04\u0e33\u0e19\u0e27\u0e13\u0e08\u0e32\u0e01 (Total - Available) / Total \u0e16\u0e49\u0e32\u0e40\u0e01\u0e34\u0e19 90% \u0e2d\u0e32\u0e08\u0e40\u0e23\u0e34\u0e48\u0e21\u0e43\u0e0a\u0e49 SWAP \u0e41\u0e25\u0e30 performance \u0e08\u0e30\u0e0a\u0e49\u0e32\u0e25\u0e07"
+      ]
     },
     {
       "id": 3,
@@ -70,7 +68,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "auto",
         "showThresholdLabels": false,
@@ -105,8 +105,7 @@
           "expr": "max((node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"} - node_filesystem_free_bytes{fstype!~\"tmpfs|overlay\"}) / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"} * 100)",
           "legendFormat": "Disk"
         }
-      ],
-      "description": "% \u0e1e\u0e37\u0e49\u0e19\u0e17\u0e35\u0e48 disk \u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e2d\u0e22\u0e39\u0e48\u0e43\u0e19\u0e41\u0e15\u0e48\u0e25\u0e30 instance (\u0e44\u0e21\u0e48\u0e23\u0e27\u0e21 tmpfs \u0e41\u0e25\u0e30 overlay) \u0e16\u0e49\u0e32\u0e40\u0e01\u0e34\u0e19 85% \u0e04\u0e27\u0e23\u0e17\u0e33\u0e04\u0e27\u0e32\u0e21\u0e2a\u0e30\u0e2d\u0e32\u0e14\u0e2b\u0e23\u0e37\u0e2d\u0e02\u0e22\u0e32\u0e22 disk"
+      ]
     },
     {
       "id": 4,
@@ -137,8 +136,7 @@
         {
           "format": "short"
         }
-      ],
-      "description": "\u0e2d\u0e31\u0e15\u0e23\u0e32 network traffic \u0e02\u0e32\u0e40\u0e02\u0e49\u0e32 (receive) \u0e41\u0e25\u0e30\u0e02\u0e32\u0e2d\u0e2d\u0e01 (transmit) \u0e15\u0e48\u0e2d\u0e27\u0e34\u0e19\u0e32\u0e17\u0e35 \u0e44\u0e21\u0e48\u0e23\u0e27\u0e21 loopback interface"
+      ]
     },
     {
       "id": 5,
@@ -164,8 +162,7 @@
           "expr": "node_load15",
           "legendFormat": "15m"
         }
-      ],
-      "description": "\u0e04\u0e48\u0e32\u0e40\u0e09\u0e25\u0e35\u0e48\u0e22 system load \u0e43\u0e19 1, 5 \u0e41\u0e25\u0e30 15 \u0e19\u0e32\u0e17\u0e35\u0e17\u0e35\u0e48\u0e1c\u0e48\u0e32\u0e19\u0e21\u0e32 \u0e16\u0e49\u0e32\u0e04\u0e48\u0e32\u0e40\u0e01\u0e34\u0e19\u0e08\u0e33\u0e19\u0e27\u0e19 CPU core \u0e41\u0e2a\u0e14\u0e07\u0e27\u0e48\u0e32 process \u0e01\u0e33\u0e25\u0e31\u0e07\u0e23\u0e2d CPU \u0e2d\u0e22\u0e39\u0e48"
+      ]
     },
     {
       "id": 6,
@@ -180,7 +177,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "auto",
         "colorMode": "value",
@@ -197,8 +196,7 @@
           "expr": "time() - node_boot_time_seconds",
           "legendFormat": "Uptime"
         }
-      ],
-      "description": "\u0e23\u0e30\u0e22\u0e30\u0e40\u0e27\u0e25\u0e32\u0e17\u0e35\u0e48\u0e41\u0e15\u0e48\u0e25\u0e30 server \u0e23\u0e31\u0e19\u0e21\u0e32\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e44\u0e14\u0e49 restart"
+      ]
     },
     {
       "id": 7,
@@ -213,7 +211,9 @@
       },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "horizontal",
         "colorMode": "background",
@@ -259,8 +259,7 @@
           "expr": "up",
           "legendFormat": "{{job}} / {{instance}}"
         }
-      ],
-      "description": "\u0e2a\u0e16\u0e32\u0e19\u0e30\u0e02\u0e2d\u0e07\u0e17\u0e38\u0e01 scrape target \u0e43\u0e19 Prometheus \u2014 1 = UP (scrape \u0e44\u0e14\u0e49\u0e1b\u0e01\u0e15\u0e34), 0 = DOWN (scrape \u0e44\u0e21\u0e48\u0e44\u0e14\u0e49)"
+      ]
     }
   ],
   "schemaVersion": 38,
