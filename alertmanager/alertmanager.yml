@@ -1,50 +1,52 @@
 global:
   resolve_timeout: 5m
 
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
 route:
   group_by: ['alertname', 'instance']
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h
-  # --- Default Receiver ---
-  # By default, use msteams as an example, but you can change it to slack, telegram, etc.
-  receiver: 'msteams'
+  receiver: 'telegram'
 
   routes:
-    # Example: route specific severities to different receivers
     - match:
         severity: critical
-      receiver: 'msteams' # Change to yours if needed
+      receiver: 'telegram'
+      repeat_interval: 1h
 
 receivers:
-  # 🟢 Microsoft Teams
-  - name: 'msteams'
-    webhook_configs:
-      - url: '${MSTEAMS_WEBHOOK_URL}'
+  # 🟠 Telegram (default)
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '${TELEGRAM_BOT_TOKEN}'
+        chat_id: ${TELEGRAM_CHAT_ID}
+        parse_mode: 'HTML'
+        message: '{{ template "telegram.message" . }}'
 
-  # 🟠 Telegram (Template - Uncomment to enable)
-  # - name: 'telegram'
-  #   telegram_configs:
-  #   - bot_token: '${TELEGRAM_BOT_TOKEN}'
-  #     chat_id: ${TELEGRAM_CHAT_ID}
-  #     parse_mode: 'HTML'
+  # 🟢 Microsoft Teams (optional)
+  # - name: 'msteams'
+  #   webhook_configs:
+  #     - url: '${MSTEAMS_WEBHOOK_URL}'
 
-  # 🔵 Slack (Template - Uncomment to enable)
+  # 🔵 Slack (optional)
   # - name: 'slack'
   #   slack_configs:
-  #   - api_url: '${SLACK_WEBHOOK_URL}'
-  #     channel: '${SLACK_CHANNEL}'
+  #     - api_url: '${SLACK_WEBHOOK_URL}'
+  #       channel: '${SLACK_CHANNEL}'
 
-  # ⚪ Email (Template - Uncomment to enable)
+  # ⚪ Email (optional)
   # - name: 'email'
   #   email_configs:
-  #   - to: '${ALERT_EMAIL_TO}'
-  #     from: '${SMTP_FROM}'
-  #     smarthost: '${SMTP_HOST}'
-  #     auth_username: '${SMTP_USER}'
-  #     auth_password: '${SMTP_PASSWORD}'
+  #     - to: '${ALERT_EMAIL_TO}'
+  #       from: '${SMTP_FROM}'
+  #       smarthost: '${SMTP_HOST}'
+  #       auth_username: '${SMTP_USER}'
+  #       auth_password: '${SMTP_PASSWORD}'
 
-  # 🟣 LINE (Template - Uncomment to enable)
+  # 🟣 LINE (optional — requires webhook proxy or n8n)
   # - name: 'line'
   #   webhook_configs:
   #     - url: '${LINE_WEBHOOK_URL}'

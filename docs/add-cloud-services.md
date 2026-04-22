@@ -75,33 +75,24 @@ reverse proxy. Port `9187` is the postgres-exporter default.
 
 ### 3. Add a scrape job
 
-In `.env`:
-
-```bash
-POSTGRES_EXPORTER_ADDR=10.0.0.20:9187
-POSTGRES_INSTANCE_NAME=primary
-```
-
-In `prometheus/entrypoint.sh`, export those with defaults and append them
-to `VAR_LIST`:
-
-```bash
-export POSTGRES_EXPORTER_ADDR=${POSTGRES_EXPORTER_ADDR:-127.0.0.1:9187}
-export POSTGRES_INSTANCE_NAME=${POSTGRES_INSTANCE_NAME:-primary}
-# …
-VAR_LIST='…,$POSTGRES_EXPORTER_ADDR,$POSTGRES_INSTANCE_NAME'
-```
-
-In `prometheus/prometheus.yml`:
+Add a new job directly to `prometheus/prometheus.yml`:
 
 ```yaml
   - job_name: 'postgres'
     static_configs:
-      - targets: ['${POSTGRES_EXPORTER_ADDR}']
+      - targets: ['10.0.0.20:9187']
         labels:
           db_type: postgres
-          instance: '${POSTGRES_INSTANCE_NAME}'
+          name: primary
 ```
+
+Then reload Prometheus:
+
+```bash
+docker compose exec prometheus kill -HUP 1
+```
+
+Confirm the target is `UP` at <http://localhost:9090/targets>.
 
 ### 4. Add alert rules
 
@@ -137,7 +128,7 @@ provisioned JSON file into `grafana/provisioning/dashboards/`.
 ## Other common exporters
 
 | Service | Exporter | Default port |
-|---------|------------------------------------|--------------|
+| ------- | ---------------------------------- | ------------ |
 | Redis | `oliver006/redis_exporter` | `9121` |
 | MySQL | `prometheus/mysqld_exporter` | `9104` |
 | MongoDB | `percona/mongodb_exporter` | `9216` |

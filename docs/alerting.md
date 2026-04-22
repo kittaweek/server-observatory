@@ -1,34 +1,66 @@
 # Configuring alert channels
 
-The stack ships with a single active channel (Microsoft Teams) and
-commented-out templates for the rest. To enable an additional channel,
-you'll typically:
+The stack ships with **Telegram as the default receiver**. MS Teams, Slack,
+Email, and LINE are available as commented-out templates in
+`alertmanager/alertmanager.yml`. To switch or add a channel:
 
 1. Fill in the relevant variables in `.env`.
-2. Uncomment the matching receiver block in
-   `alertmanager/alertmanager.yml`.
-3. Route alerts to it via the `route` / `routes` stanza.
-4. Run `make up` to rebuild Alertmanager with the new config.
+2. Set the receiver name in the `route.receiver` field of `alertmanager.yml`.
+3. Uncomment the matching receiver block.
+4. Run `docker compose restart alertmanager` (no rebuild needed — entrypoint re-expands the config on start).
 
-After every change, verify the config:
+Verify the config after every change:
 
 ```bash
 docker compose exec alertmanager amtool check-config /tmp/alertmanager.yml
 ```
 
-## Microsoft Teams
+## Telegram (default)
 
-Teams accepts standard Prometheus webhook payloads via
-[`prom2teams`](https://github.com/idealista/prom2teams) or a custom
-webhook relay (since native "Incoming Webhook" connectors are being
-deprecated).
+1. Create a bot via [@BotFather](https://t.me/BotFather) → copy the token.
+2. Add the bot to your group (or DM it) and send one message so a chat is created.
+3. Find your `chat_id`:
+
+   ```bash
+   curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" | jq '.result[].message.chat'
+   ```
+
+   Group chat IDs start with `-100`.
+
+```bash
+# .env
+TELEGRAM_BOT_TOKEN=0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+TELEGRAM_CHAT_ID=-1000000000000
+```
+
+Active by default in `alertmanager.yml`:
+
+```yaml
+- name: 'telegram'
+  telegram_configs:
+    - bot_token: '${TELEGRAM_BOT_TOKEN}'
+      chat_id: ${TELEGRAM_CHAT_ID}
+      parse_mode: 'HTML'
+      message: '{{ template "telegram.message" . }}'
+```
+
+The HTML message template lives in
+`alertmanager/templates/telegram.tmpl`. It renders firing alerts in red 🔴
+and resolved alerts in green ✅ with instance, severity, summary, and
+description.
+
+## Microsoft Teams (optional)
+
+Teams accepts standard Prometheus webhook payloads via a webhook relay
+(since native "Incoming Webhook" connectors are being deprecated by
+Microsoft).
 
 ```bash
 # .env
 MSTEAMS_WEBHOOK_URL=https://your-teams-relay.example.com/webhook
 ```
 
-Already active by default in `alertmanager.yml`:
+Uncomment in `alertmanager.yml` and set as `receiver`:
 
 ```yaml
 - name: 'msteams'
@@ -36,14 +68,14 @@ Already active by default in `alertmanager.yml`:
     - url: '${MSTEAMS_WEBHOOK_URL}'
 ```
 
-## Slack
+## Slack (optional)
 
 Create an Incoming Webhook at
 <https://api.slack.com/messaging/webhooks>.
 
 ```bash
 # .env
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/<WORKSPACE_ID>/<CHANNEL_ID>/<TOKEN>
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXX
 SLACK_CHANNEL=#alerts
 ```
 
@@ -58,32 +90,7 @@ Uncomment in `alertmanager.yml`:
       text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
 ```
 
-## Telegram
-
-1. Create a bot via [@BotFather](https://t.me/BotFather) → copy the token.
-2. Add the bot to your group (or DM it) and send one message.
-3. Find your `chat_id`:
-   ```bash
-   curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates" | jq '.result[].message.chat'
-   ```
-
-```bash
-# .env
-TELEGRAM_BOT_TOKEN=0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-TELEGRAM_CHAT_ID=-1000000000000
-```
-
-Uncomment in `alertmanager.yml`:
-
-```yaml
-- name: 'telegram'
-  telegram_configs:
-    - bot_token: '${TELEGRAM_BOT_TOKEN}'
-      chat_id: ${TELEGRAM_CHAT_ID}
-      parse_mode: 'HTML'
-```
-
-## Email (SMTP)
+## Email / SMTP (optional)
 
 Works with any SMTP provider. For Gmail, use an
 [App Password](https://support.google.com/accounts/answer/185833).
@@ -109,14 +116,11 @@ Uncomment in `alertmanager.yml`:
       auth_password: '${SMTP_PASSWORD}'
 ```
 
-## LINE (via webhook relay)
+## LINE (optional — via webhook relay)
 
-LINE Notify has been deprecated; the most reliable pattern is a small
-relay (n8n, Cloudflare Worker, or a 50-line FastAPI app) that:
-
-1. Accepts the Alertmanager webhook payload at a URL of your choice.
-2. Formats each alert into a LINE Messaging API `push` call.
-3. Optionally authenticates via a shared bearer token.
+LINE Notify has been deprecated. The most reliable pattern is a small
+relay (n8n, Cloudflare Worker, or a minimal FastAPI app) that accepts
+the Alertmanager webhook payload and forwards it to the LINE Messaging API.
 
 ```bash
 # .env
@@ -124,7 +128,7 @@ LINE_WEBHOOK_URL=https://your-line-relay.example.com/webhook
 LINE_WEBHOOK_TOKEN=change_me_bearer_token
 ```
 
-Uncomment / adjust in `alertmanager.yml`:
+Uncomment in `alertmanager.yml`:
 
 ```yaml
 - name: 'line'
@@ -139,29 +143,30 @@ Uncomment / adjust in `alertmanager.yml`:
 
 ## Routing rules
 
-Once multiple receivers exist, route them based on labels. Example:
+Route different severities or teams to different receivers:
 
 ```yaml
 route:
-  receiver: 'msteams'          # catch-all fallback
+  receiver: 'telegram'          # catch-all default
   group_by: ['alertname', 'instance']
   routes:
     - match:
         severity: critical
-      receiver: 'telegram'     # page loudly for critical
+      receiver: 'telegram'
+      repeat_interval: 1h       # re-notify every hour while firing
     - match:
         team: db
-      receiver: 'slack'        # DB team has their own channel
+      receiver: 'slack'         # DB team has their own channel
 ```
 
 Labels come from two places: **alert rule labels** (set in
-`prometheus/rules/alert.rules.yml`) and **target labels** (set under
-`labels:` in each scrape job). Keep label names consistent so routing
-stays predictable.
+`prometheus/rules/*.rules.yml`) and **target labels** (set under
+`labels:` in `prometheus/targets/*.yml`). Keep label names consistent
+so routing stays predictable.
 
 ## Testing without triggering real incidents
 
-You can send a synthetic alert directly to Alertmanager:
+Send a synthetic alert directly to Alertmanager:
 
 ```bash
 curl -s -H 'Content-Type: application/json' -XPOST \
@@ -169,9 +174,9 @@ curl -s -H 'Content-Type: application/json' -XPOST \
   http://localhost:9093/api/v2/alerts
 ```
 
-…or silence noisy alerts while you iterate:
+Silence noisy alerts while iterating:
 
 ```bash
 docker compose exec alertmanager amtool silence add \
-  alertname=HighCPUUsage --duration=30m --comment='tuning thresholds'
+  alertname=HighCpuUsage --duration=30m --comment='tuning thresholds'
 ```

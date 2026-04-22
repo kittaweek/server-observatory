@@ -21,28 +21,30 @@ flowchart LR
     end
 
     subgraph Remote["Remote hosts & services (optional)"]
-        RN[node_exporter<br/>on other hosts]
+        RN[node_exporter<br/>Linux hosts]
+        WE[windows_exporter<br/>Windows hosts]
         PG[postgres_exporter]
         RD[redis_exporter]
     end
 
     subgraph Channels["Alert channels"]
+        TG[Telegram]
         T[MS Teams]
         S[Slack]
-        TG[Telegram]
         EM[Email]
         L[LINE relay]
     end
 
     NE --> P
     RN -.-> P
+    WE -.-> P
     PG -.-> P
     RD -.-> P
     P --> AM
     P --> G
-    AM --> T
+    AM --> TG
+    AM -.-> T
     AM -.-> S
-    AM -.-> TG
     AM -.-> EM
     AM -.-> L
 ```
@@ -79,10 +81,10 @@ and edit the port bindings there.
   services run as non-root.
 - **Dynamic config** — `${VAR}` substitution across Prometheus,
   Alertmanager, and Grafana provisioning.
-- **Pre-provisioned** — Grafana datasource and default Linux dashboard
+- **Pre-provisioned** — Grafana datasource, Linux, and Windows dashboards
   ship out of the box.
-- **Multi-channel alerts** — MS Teams active by default; Slack,
-  Telegram, Email, and LINE ready to uncomment. See
+- **Multi-channel alerts** — Telegram active by default; MS Teams, Slack,
+  Email, and LINE ready to uncomment. See
   [`docs/alerting.md`](docs/alerting.md).
 - **Resource limits** — CPU/memory caps applied to every service to
   prevent host exhaustion.
