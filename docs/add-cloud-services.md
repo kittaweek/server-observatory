@@ -52,13 +52,13 @@ WantedBy=multi-user.target
 
 ```bash
 # /etc/postgres_exporter.env (mode 0600, owned by postgres)
-DATA_SOURCE_NAME=postgresql://exporter_user:REPLACE_ME@localhost:5432/postgres?sslmode=disable
+DATA_SOURCE_NAME=postgresql://exporter_user:REPLACE_ME@localhost:5432/postgres?sslmode=disable  # pragma: allowlist secret
 ```
 
 Create a read-only DB user for the exporter:
 
 ```sql
-CREATE USER exporter_user WITH PASSWORD 'REPLACE_ME';
+CREATE USER exporter_user WITH PASSWORD 'REPLACE_ME';  -- pragma: allowlist secret
 GRANT pg_monitor TO exporter_user;
 ```
 

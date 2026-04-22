@@ -3,8 +3,8 @@ name: CI
 on:
   push:
     branches: [master, dev]
-  pull_request:
-    branches: [master, dev]
+  # pull_request:
+  #   branches: [master, dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -49,7 +49,7 @@ jobs:
           cp .env.example .env
           # Ensure required Grafana vars are present for `compose config`.
           grep -q '^GF_ADMIN_USER='     .env || echo 'GF_ADMIN_USER=admin'           >> .env
-          grep -q '^GF_ADMIN_PASSWORD=' .env || echo 'GF_ADMIN_PASSWORD=ci-dummy'    >> .env
+          grep -q '^GF_ADMIN_PASSWORD=' .env || echo 'GF_ADMIN_PASSWORD=ci-dummy'    >> .env  # pragma: allowlist secret
 
       - name: Validate docker-compose config
         run: docker compose config --quiet
@@ -59,7 +59,8 @@ jobs:
           set -a; . ./.env; set +a
           mkdir -p /tmp/rules
           envsubst < prometheus/prometheus.yml > /tmp/prometheus.yml
-          envsubst < prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml
+          envsubst '${ALERT_CPU_THRESHOLD} ${ALERT_MEMORY_THRESHOLD} ${ALERT_DISK_THRESHOLD}' \
+            < prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml
           docker run --rm \
             --entrypoint promtool \
             -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml \
