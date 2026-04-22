@@ -27,12 +27,11 @@ echo "Expanding Prometheus configurations..."
 mkdir -p /tmp/rules
 
 envsubst "$VAR_LIST" < /etc/prometheus/prometheus.yml > /tmp/prometheus.yml
-envsubst "$VAR_LIST" < /etc/prometheus/rules/alert.rules.yml > /tmp/rules/alert.rules.yml
 
-# Copy static rule files
-if [ -f /etc/prometheus/rules/recording.rules.yml ]; then
-    cp /etc/prometheus/rules/recording.rules.yml /tmp/rules/
-fi
+# Expand all rule files — static ones are copied, templated ones get envsubst
+for f in /etc/prometheus/rules/*.rules.yml; do
+    envsubst "$VAR_LIST" < "$f" > "/tmp/rules/$(basename "$f")"
+done
 
 # 3. Start Prometheus
 echo "Starting Prometheus..."

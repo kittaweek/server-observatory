@@ -24,7 +24,12 @@
       "title": "CPU Usage (%)",
       "type": "graph",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)",
@@ -37,7 +42,12 @@
       "title": "Memory Usage (%)",
       "type": "graph",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "targets": [
         {
           "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
@@ -50,10 +60,17 @@
       "title": "Disk Usage (%)",
       "type": "gauge",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 8
+      },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "auto",
         "showThresholdLabels": false,
@@ -67,9 +84,18 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 85 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
             ]
           }
         }
@@ -86,7 +112,12 @@
       "title": "Network I/O",
       "type": "graph",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 6,
+        "y": 8
+      },
       "targets": [
         {
           "expr": "rate(node_network_receive_bytes_total{device!~\"lo\"}[5m])",
@@ -98,8 +129,13 @@
         }
       ],
       "yaxes": [
-        { "format": "bytes", "label": "bytes/s" },
-        { "format": "short" }
+        {
+          "format": "bytes",
+          "label": "bytes/s"
+        },
+        {
+          "format": "short"
+        }
       ]
     },
     {
@@ -107,7 +143,12 @@
       "title": "System Load Average",
       "type": "graph",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
       "targets": [
         {
           "expr": "node_load1",
@@ -128,10 +169,17 @@
       "title": "System Uptime",
       "type": "stat",
       "datasource": "Prometheus",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
       "options": {
         "reduceOptions": {
-          "calcs": ["lastNotNull"]
+          "calcs": [
+            "lastNotNull"
+          ]
         },
         "orientation": "auto",
         "colorMode": "value",
@@ -147,6 +195,69 @@
         {
           "expr": "time() - node_boot_time_seconds",
           "legendFormat": "Uptime"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Scrape Targets Status",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "DOWN",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "UP",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "up",
+          "legendFormat": "{{job}} / {{instance}}"
         }
       ]
     }

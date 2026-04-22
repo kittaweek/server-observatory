@@ -1,0 +1,69 @@
+groups:
+  - name: windows-alerts
+    rules:
+      - alert: WindowsInstanceDown
+        expr: up{job="windows"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Windows host {{ $labels.instance }} down"
+          description: >-
+            Windows host {{ $labels.instance }} has been unreachable
+            for more than 1 minute.
+
+      - alert: WindowsHighCpuUsage
+        expr: >-
+          100 - (avg by(instance) (rate(windows_cpu_time_total{mode="idle"}[5m])) * 100)
+          > ${ALERT_CPU_THRESHOLD}
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on Windows host {{ $labels.instance }}"
+          description: >-
+            CPU usage is above ${ALERT_CPU_THRESHOLD}%
+            (current value: {{ $value | printf "%.2f" }}%)
+
+      - alert: WindowsHighMemoryUsage
+        expr: >-
+          100 - (windows_os_physical_memory_free_bytes
+          / windows_cs_physical_memory_bytes * 100)
+          > ${ALERT_MEMORY_THRESHOLD}
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on Windows host {{ $labels.instance }}"
+          description: >-
+            Memory usage is above ${ALERT_MEMORY_THRESHOLD}%
+            (current value: {{ $value | printf "%.2f" }}%)
+
+      - alert: WindowsHighDiskUsage
+        expr: >-
+          100 - (windows_logical_disk_free_bytes{volume!~"HarddiskVolume.*"}
+          / windows_logical_disk_size_bytes{volume!~"HarddiskVolume.*"} * 100)
+          > ${ALERT_DISK_THRESHOLD}
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on Windows host {{ $labels.instance }}"
+          description: >-
+            Disk {{ $labels.volume }} usage is above ${ALERT_DISK_THRESHOLD}%
+            (current value: {{ $value | printf "%.2f" }}%)
+
+      - alert: WindowsDiskWillFillIn4Hours
+        expr: >-
+          predict_linear(
+            windows_logical_disk_free_bytes{volume!~"HarddiskVolume.*"}[1h],
+            4*3600
+          ) < 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk will fill in 4 hours on Windows host {{ $labels.instance }}"
+          description: >-
+            Disk {{ $labels.volume }} is predicted to fill up within 4 hours
+            based on current growth rate.
