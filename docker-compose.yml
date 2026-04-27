@@ -1,9 +1,11 @@
+version: "3.8"
+
 networks:
   observatory-net-test:
     driver: bridge
-  shared-proxy:
-    external: true
-
+  devsiam-mon:
+    name: devsiam-mon
+    driver: bridge
 services:
   prometheus:
     user: "65534:0"
@@ -19,7 +21,6 @@ services:
     entrypoint: ["/bin/sh", "/etc/prometheus/entrypoint.sh"]
     networks:
       - observatory-net-test
-      - shared-proxy
     restart: unless-stopped
     env_file: .env
     healthcheck:
@@ -63,7 +64,7 @@ services:
       - ./data/grafana:/var/lib/grafana
     networks:
       - observatory-net-test
-      - shared-proxy
+      - devsiam-mon
     restart: unless-stopped
     env_file: .env
     healthcheck:
@@ -103,7 +104,6 @@ services:
     entrypoint: ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]
     networks:
       - observatory-net-test
-      - shared-proxy
     restart: unless-stopped
     env_file: .env
     healthcheck:
@@ -120,16 +120,6 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128m
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   node-exporter:
     image: prom/node-exporter:v1.11.1
@@ -146,7 +136,6 @@ services:
         $$|/)"
     networks:
       - observatory-net-test
-      - shared-proxy
     restart: unless-stopped
     healthcheck:
       test:
@@ -176,7 +165,7 @@ services:
   loki:
     image: grafana/loki:3.7.1
     ports:
-      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
+      - "${LOKI_PORT:-3100}:3100"
     volumes:
       - ./loki:/etc/loki
       - ./data/loki:/loki
@@ -228,17 +217,9 @@ services:
       - observatory-net-test
     restart: unless-stopped
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:9256/metrics",
-        ]
+      test: ["CMD-SHELL", "cat /proc/net/tcp6 | awk '{print $2}' | grep -q '00002394'"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       start_period: 20s
       retries: 3
     deploy:
