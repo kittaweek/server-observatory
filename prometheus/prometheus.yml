@@ -36,6 +36,9 @@ scrape_configs:
       - files:
           - /etc/prometheus/targets/linux.yml
         refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [name]
+        target_label: instance
 
   # Remote Windows hosts (windows_exporter :9182)
   # Edit prometheus/targets/windows.yml to add/remove hosts.
