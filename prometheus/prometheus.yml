@@ -3,7 +3,7 @@ global:
   evaluation_interval: ${PROMETHEUS_EVALUATION_INTERVAL}
 
 rule_files:
-  - "/tmp/rules/*.rules.yml"
+  - '/tmp/rules/*.rules.yml'
 
 alerting:
   alertmanagers:
@@ -43,4 +43,10 @@ scrape_configs:
     file_sd_configs:
       - files:
           - /etc/prometheus/targets/windows.yml
+        refresh_interval: 30s
+  # Remote Linux hosts (process-exporter :9256)
+  - job_name: 'process'
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/process.yml
         refresh_interval: 30s
