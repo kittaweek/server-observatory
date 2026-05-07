@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   observatory-net-test:
     driver: bridge
@@ -172,7 +170,6 @@ services:
     command: -config.file=/etc/loki/loki.yml
     networks:
       - observatory-net-test
-      - shared-proxy
     restart: unless-stopped
     healthcheck:
       test:
