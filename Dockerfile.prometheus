@@ -1,6 +1,6 @@
 FROM prom/prometheus:v3.12.0 AS base
 
-FROM alpine:3.23
+FROM alpine:3.24
 RUN apk add --no-cache gettext libintl wget ca-certificates
 COPY --from=base /bin/prometheus /bin/prometheus
 COPY --from=base /bin/promtool /bin/promtool
