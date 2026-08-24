@@ -1,5 +1,5 @@
 # Stage 1: Pull official binaries
-FROM prom/alertmanager:v0.33.1 AS upstream
+FROM prom/alertmanager:v0.34.0 AS upstream
 
 # Stage 2: Run on patched Alpine to allow system package upgrades
 FROM alpine:3.24
