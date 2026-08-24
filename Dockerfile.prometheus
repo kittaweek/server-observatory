@@ -1,4 +1,4 @@
-FROM prom/prometheus:v3.13.1 AS base
+FROM prom/prometheus:v3.14.0 AS base
 
 FROM alpine:3.24
 RUN apk add --no-cache gettext libintl wget ca-certificates
