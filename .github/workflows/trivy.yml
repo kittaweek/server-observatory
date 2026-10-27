@@ -2,7 +2,7 @@ name: Trivy vulnerability scan
 
 on:
   push:
-    branches: [master, dev]
+    branches: [main, dev]
   schedule:
     - cron: "0 3 * * 1" # every Monday at 3am UTC
 
