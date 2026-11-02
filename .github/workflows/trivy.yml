@@ -20,8 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - prom/prometheus:v3.11.1
           - prom/node-exporter:v1.11.1
+          - grafana/loki:3.7.1
+          - ncabatoff/process-exporter:0.8.7
 
     steps:
       - name: Run Trivy on ${{ matrix.image }}
@@ -44,6 +45,8 @@ jobs:
             dockerfile: Dockerfile.grafana
           - name: alertmanager-patched
             dockerfile: Dockerfile.alertmanager
+          - name: prometheus-patched
+            dockerfile: Dockerfile.prometheus
 
     steps:
       - uses: actions/checkout@v7
