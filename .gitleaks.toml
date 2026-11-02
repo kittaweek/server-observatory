@@ -5,3 +5,7 @@ useDefault = true
 paths = [
   ".secrets.baseline"
 ]
+regexes = [
+  # placeholder token in .env.example / docs (not a real bot token)
+  '''0000000000:A{35}''',
+]
