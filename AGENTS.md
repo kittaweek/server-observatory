@@ -16,7 +16,7 @@
 
 ## หมายเหตุ
 - dependabot รันวันจันทร์ 09:00 Asia/Bangkok · ไม่ target `dev`
-- มี `devsiam-observatory` (private, All rights reserved) เป็นต้นฉบับแยก ห้ามคัดลอกโค้ด/ข้อมูลข้ามมาโดยไม่ถาม Post
+- license MIT (community edition) · ห้ามนำโค้ด/config/ข้อมูลภายในของ Devsiam หรือของลูกค้ามาใส่ใน repo นี้ เพราะเป็น repo public
 
 ## กฎ
 - ห้าม push ตรงเข้า `main` → เปิด PR เสมอ · merge แบบ squash เท่านั้น · branch ที่ merge แล้วลบอัตโนมัติ
