@@ -5,7 +5,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    target-branch: dev
+      time: "09:00"
+      timezone: Asia/Bangkok
     labels:
       - dependencies
 
@@ -14,6 +15,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    target-branch: dev
+      time: "09:00"
+      timezone: Asia/Bangkok
     labels:
       - dependencies

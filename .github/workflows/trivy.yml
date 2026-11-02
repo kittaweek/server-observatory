@@ -2,7 +2,9 @@ name: Trivy vulnerability scan
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "0 3 * * 1" # every Monday at 3am UTC
 
@@ -18,8 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - prom/prometheus:v3.11.1
           - prom/node-exporter:v1.11.1
+          - grafana/loki:3.7.1
+          - ncabatoff/process-exporter:0.8.7
 
     steps:
       - name: Run Trivy on ${{ matrix.image }}
@@ -42,9 +45,11 @@ jobs:
             dockerfile: Dockerfile.grafana
           - name: alertmanager-patched
             dockerfile: Dockerfile.alertmanager
+          - name: prometheus-patched
+            dockerfile: Dockerfile.prometheus
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4

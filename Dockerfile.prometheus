@@ -1,6 +1,6 @@
-FROM prom/prometheus:v3.11.3 AS base
+FROM prom/prometheus:v3.15.1 AS base
 
-FROM alpine:3.23
+FROM alpine:3.24
 RUN apk add --no-cache gettext libintl wget ca-certificates
 COPY --from=base /bin/prometheus /bin/prometheus
 COPY --from=base /bin/promtool /bin/promtool
@@ -19,7 +19,7 @@ VOLUME [ "/prometheus" ]
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1
+  CMD ["wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
 
 ENTRYPOINT [ "/bin/prometheus" ]
 CMD [ "--config.file=/etc/prometheus/prometheus.yml", \

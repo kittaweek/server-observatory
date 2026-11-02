@@ -1,4 +1,4 @@
-FROM grafana/grafana:13.0.1
+FROM grafana/grafana:13.2.4
 
 # Upgrade vulnerable system packages
 USER root
@@ -7,4 +7,4 @@ RUN apk update && apk upgrade --no-cache zlib
 USER grafana
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1
+  CMD ["wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
